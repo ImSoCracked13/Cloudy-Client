@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#4F46E5" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/favicon.svg">
+    <title>Cloudy</title>
+    <script src="/env.js"></script>
+    <script>
+      // Define environment variables if they don't exist
+      window.env = window.env || {};
+      window.env.VITE_API_URL = window.env.VITE_API_URL || "http://localhost:3000";
+      window.env.VITE_GOOGLE_CLIENT_ID = window.env.VITE_GOOGLE_CLIENT_ID || "584040192605-go1fbggkk7is3j7ntumq61d0d5gi8gj5.apps.googleusercontent.com";
+    </script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+
+    <script src="/src/index.tsx" type="module"></script>
+  </body>
+</html>
