@@ -84,12 +84,18 @@ export default function GoogleButton(props: GoogleButtonProps) {
       return;
     }
     
+    // Log useful information for debugging
+    console.log('Current origin:', window.location.origin);
+    console.log('Initializing Google button with client ID:', clientId);
+    
     try {
       window.google.accounts.id.initialize({
         client_id: clientId,
         callback: handleCredentialResponse,
         auto_select: false,
         cancel_on_tap_outside: true,
+        // Add allowed origins to handle the domain issue
+        allowed_parent_origin: window.location.origin
       });
 
       window.google.accounts.id.renderButton(buttonRef, {
@@ -101,8 +107,13 @@ export default function GoogleButton(props: GoogleButtonProps) {
         logo_alignment: 'left',
         width: props.fullWidth ? 400 : 240,
       });
+      
+      console.log('Google button initialized successfully');
     } catch (error) {
       console.error('Error initializing Google button:', error);
+      
+      // Show a more detailed error message
+      notificationService.error('Google Sign-In is not available. The current origin may not be authorized for this client ID.');
       
       // If Google button fails to initialize, show a custom button
       if (googleButtonContainer) {

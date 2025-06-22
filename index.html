@@ -7,18 +7,25 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/favicon.svg">
     <title>Cloudy</title>
-    <script src="/env.js"></script>
     <script>
-      // Define environment variables if they don't exist
-      window.env = window.env || {};
-      window.env.VITE_API_URL = window.env.VITE_API_URL || "http://localhost:3000";
-      window.env.VITE_GOOGLE_CLIENT_ID = window.env.VITE_GOOGLE_CLIENT_ID || "584040192605-go1fbggkk7is3j7ntumq61d0d5gi8gj5.apps.googleusercontent.com";
+      // Define environment variables directly
+      window.env = {
+        VITE_API_URL: "https://cloudy-server.fly.dev",
+        VITE_GOOGLE_CLIENT_ID: "584040192605-go1fbggkk7is3j7ntumq61d0d5gi8gj5.apps.googleusercontent.com"
+      };
     </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
 
+    <script type="module">
+      // Preload critical dependencies to avoid issues
+      import 'solid-js';
+      import 'solid-js/store';
+      import 'solid-js/web';
+      import '@solidjs/router';
+    </script>
     <script src="/src/index.tsx" type="module"></script>
   </body>
 </html>

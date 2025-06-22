@@ -1,7 +1,8 @@
 import { lazy } from 'solid-js';
 import { Route } from '@solidjs/router';
 import ErrorPage from '../pages/Error';
-import Layout from '../layout/Layout';
+import AuthenticatedLayout from '../layout/AuthenticatedLayout';
+import PublicLayout from '../layout/PublicLayout';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
 import { useNavigate } from '@solidjs/router';
 import { createEffect } from 'solid-js';
@@ -13,8 +14,7 @@ const Register = lazy(() => import('../pages/Register'));
 const Drive = lazy(() => import('../pages/Drive'));
 const Bin = lazy(() => import('../pages/Bin'));
 const VerificationPending = lazy(() => import('../pages/VerificationPending'));
-const VerifyEmail = lazy(() => import('../pages/VerifyEmail'));
-const VerifySuccess = lazy(() => import('../pages/VerifySuccess'));
+const VerifyState = lazy(() => import('../pages/VerifyState'));
 const About = lazy(() => import('../pages/About'));
 const Settings = lazy(() => import('../pages/Settings'));
 const Storage = lazy(() => import('../pages/Storage'));
@@ -22,73 +22,74 @@ const Storage = lazy(() => import('../pages/Storage'));
 export default function AppRoutes() {
   return (
     <>
+      {/* Public Routes - Use PublicLayout */}
       <Route path="/" component={() => (
-        <Layout>
+        <PublicLayout>
           <Home />
-        </Layout>
+        </PublicLayout>
       )} />
       <Route path="/login" component={() => (
-        <Layout>
+        <PublicLayout>
           <Login />
-        </Layout>
+        </PublicLayout>
       )} />
       <Route path="/register" component={() => (
-        <Layout>
+        <PublicLayout>
           <Register />
-        </Layout>
+        </PublicLayout>
       )} />
       <Route path="/verification-pending" component={() => (
-        <Layout>
+        <PublicLayout>
           <VerificationPending />
-        </Layout>
+        </PublicLayout>
       )} />
       <Route path="/verify-email" component={() => (
-        <Layout>
-          <VerifyEmail />
-        </Layout>
+        <PublicLayout>
+          <VerifyState />
+        </PublicLayout>
       )} />
       <Route path="/verify-success" component={() => (
-        <Layout>
-          <VerifySuccess />
-        </Layout>
+        <PublicLayout>
+          <VerifyState />
+        </PublicLayout>
       )} />
       <Route path="/about" component={() => (
-        <Layout>
+        <PublicLayout>
           <About />
-        </Layout>
+        </PublicLayout>
       )} />
       
-      {/* Protected Routes */}
+      {/* Protected Routes - Use AuthenticatedLayout */}
       <Route path="/drive/:folderId?" component={() => (
-        <Layout>
+        <AuthenticatedLayout>
           <ProtectedRoute>
             <Drive />
           </ProtectedRoute>
-        </Layout>
+        </AuthenticatedLayout>
       )} />
       
       <Route path="/bin" component={() => (
-        <Layout>
+        <AuthenticatedLayout>
           <ProtectedRoute>
             <Bin />
           </ProtectedRoute>
-        </Layout>
+        </AuthenticatedLayout>
       )} />
       
       <Route path="/settings" component={() => (
-        <Layout>
+        <AuthenticatedLayout>
           <ProtectedRoute>
             <Settings />
           </ProtectedRoute>
-        </Layout>
+        </AuthenticatedLayout>
       )} />
       
       <Route path="/storage" component={() => (
-        <Layout>
+        <AuthenticatedLayout>
           <ProtectedRoute>
             <Storage />
           </ProtectedRoute>
-        </Layout>
+        </AuthenticatedLayout>
       )} />
       
       {/* Dashboard redirect for backward compatibility */}
@@ -102,9 +103,9 @@ export default function AppRoutes() {
       
       {/* Fallback route for 404 */}
       <Route path="*" component={() => (
-        <Layout>
+        <PublicLayout>
           <ErrorPage code={404} message="Page not found" />
-        </Layout>
+        </PublicLayout>
       )} />
     </>
   );

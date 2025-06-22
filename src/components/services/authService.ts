@@ -1,6 +1,14 @@
-import { User, GoogleAuthResponse } from '../types/user';
+import { User, GoogleAuthResponse } from '../types/userType';
 import { notificationService } from '../common/Notification';
 import { authGateway } from '../gateway/authGateway';
+
+// Add an interface for RegisterResult to properly type the response
+interface RegisterResult {
+  user?: any;
+  token?: string;
+  message?: string;
+  verificationRequired?: boolean;
+}
 
 /**
  * Auth Service - Handles authentication business logic
@@ -14,6 +22,7 @@ export const authService = {
       const user = await authGateway.login({ usernameOrEmail, password });
       return user;
     } catch (error) {
+      console.error('Login error in service:', error);
       notificationService.error(error instanceof Error ? error.message : 'Login failed');
       throw error;
     }
@@ -22,40 +31,53 @@ export const authService = {
   /**
    * Register a new user
    */
-  async register(username: string, email: string, password: string): Promise<{ user: User | null; verificationRequired: boolean }> {
+  async register(username: string, email: string, password: string): Promise<any> {
     try {
-      const result = await authGateway.register({ 
-        username, 
-        email, 
-        password, 
+      console.log('Registering user:', { username, email });
+      
+      // Store email for verification process
+      localStorage.setItem('pending_verification_email', email);
+      
+      // Register user via API
+      const result = await authGateway.register({
+        username,
+        email,
+        password,
         confirmPassword: password,
         authProvider: 'local'
-      });
+      }) as RegisterResult;
       
-      // Determine if verification is required:
-      // 1. Check message for verification text
-      // 2. Check if user exists but is not verified (for local auth)
-      const messageIndicatesVerification = result.message.toLowerCase().includes('verification') || 
-                                           result.message.toLowerCase().includes('check your email');
-      const userNeedsVerification = result.user && 
-                                    result.user.authProvider === 'local' && 
-                                    result.user.isVerified === false;
+      console.log('Register result:', result);
       
-      const verificationRequired = messageIndicatesVerification || userNeedsVerification;
+      // Set token if available
+      if (result.token) {
+        localStorage.setItem('authToken', result.token);
+      }
       
-      console.log('Registration result verification check:', {
-        messageIndicatesVerification,
-        userNeedsVerification,
-        verificationRequired,
-        userAuthProvider: result.user?.authProvider,
-        userIsVerified: result.user?.isVerified
-      });
+      // Folder structure should already be created on the server side
+      // but we'll verify it just to be safe
+      if (result.user && result.user.id) {
+        try {
+          console.log('Verifying folder structure for new local user');
+          
+          // Add a small delay to ensure server has time to complete its operations
+            setTimeout(async () => {
+              try {
+                const fileGw = await import('../gateway/fileGateway').then(m => m.fileGateway);
+              const repairResult = await fileGw.repairFolderStructure();
+              console.log('Folder structure verification result:', repairResult);
+            } catch (error) {
+              console.error('Error verifying folder structure:', error);
+              }
+          }, 2000);
+        } catch (folderError) {
+          console.error('Failed to verify folder structure after registration:', folderError);
+        }
+      }
       
-      return { 
-        user: result.user, 
-        verificationRequired 
-      };
+      return result;
     } catch (error) {
+      console.error('Registration error in service:', error);
       notificationService.error(error instanceof Error ? error.message : 'Registration failed');
       throw error;
     }

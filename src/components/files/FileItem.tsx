@@ -1,15 +1,132 @@
 import { JSX } from 'solid-js';
-import { FileItem as FileItemType } from '../types/file';
-import { formatFileSize } from '../utilities/formatFileSize';
+import { FileItem as FileItemType, getFileType } from '../types/fileType';
+import { formatFileSize } from '../utilities/fileSizeFormatter';
 import { createSignal, Show } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
+import { formatDate } from '../utilities/dateFormatter';
+
+// File type color mapping
+const fileTypeColors = {
+  // Documents
+  'application/pdf': 'text-red-500',
+  'application/msword': 'text-blue-500',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'text-blue-500',
+  'application/vnd.ms-excel': 'text-green-500',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'text-green-500',
+  'application/vnd.ms-powerpoint': 'text-orange-500',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'text-orange-500',
+  'text/plain': 'text-gray-500',
+  
+  // Images
+  'image/jpeg': 'text-purple-500',
+  'image/png': 'text-purple-500',
+  'image/gif': 'text-purple-500',
+  'image/svg+xml': 'text-purple-500',
+  'image/webp': 'text-purple-500',
+  
+  // Audio
+  'audio/mpeg': 'text-pink-500',
+  'audio/wav': 'text-pink-500',
+  'audio/ogg': 'text-pink-500',
+  'audio/midi': 'text-pink-500',
+  
+  // Video
+  'video/mp4': 'text-indigo-500',
+  'video/webm': 'text-indigo-500',
+  'video/ogg': 'text-indigo-500',
+  'video/quicktime': 'text-indigo-500',
+  
+  // Archives
+  'application/zip': 'text-yellow-500',
+  'application/x-rar-compressed': 'text-yellow-500',
+  'application/x-7z-compressed': 'text-yellow-500',
+  'application/x-tar': 'text-yellow-500',
+  'application/gzip': 'text-yellow-500',
+  
+  // Code
+  'text/html': 'text-teal-500',
+  'text/css': 'text-teal-500',
+  'text/javascript': 'text-teal-500',
+  'application/json': 'text-teal-500',
+  'text/xml': 'text-teal-500',
+  'application/x-httpd-php': 'text-teal-500',
+  'application/x-python-code': 'text-teal-500',
+  'text/x-java': 'text-teal-500',
+  
+  // Executables
+  'application/x-msdownload': 'text-red-600',
+  'application/x-executable': 'text-red-600',
+  'application/x-msdos-program': 'text-red-600',
+  
+  // Default
+  'folder': 'text-amber-400',
+  'default': 'text-gray-400'
+};
+
+// File type icon mapping
+const fileTypeIcons = {
+  // Documents
+  'application/pdf': '📄',
+  'application/msword': '📝',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '📝',
+  'application/vnd.ms-excel': '📊',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '📊',
+  'application/vnd.ms-powerpoint': '📺',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': '📺',
+  'text/plain': '📄',
+  
+  // Images
+  'image/jpeg': '🖼️',
+  'image/png': '🖼️',
+  'image/gif': '🖼️',
+  'image/svg+xml': '🖼️',
+  'image/webp': '🖼️',
+  
+  // Audio
+  'audio/mpeg': '🎵',
+  'audio/wav': '🎵',
+  'audio/ogg': '🎵',
+  'audio/midi': '🎵',
+  
+  // Video
+  'video/mp4': '🎥',
+  'video/webm': '🎥',
+  'video/ogg': '🎥',
+  'video/quicktime': '🎥',
+  
+  // Archives
+  'application/zip': '📦',
+  'application/x-rar-compressed': '📦',
+  'application/x-7z-compressed': '📦',
+  'application/x-tar': '📦',
+  'application/gzip': '📦',
+  
+  // Code
+  'text/html': '💻',
+  'text/css': '💻',
+  'text/javascript': '💻',
+  'application/json': '💻',
+  'text/xml': '💻',
+  'application/x-httpd-php': '💻',
+  'application/x-python-code': '💻',
+  'text/x-java': '💻',
+  
+  // Executables
+  'application/x-msdownload': '⚡',
+  'application/x-executable': '⚡',
+  'application/x-msdos-program': '⚡',
+  
+  // Default
+  'folder': '📁',
+  'default': '📄'
+};
 
 interface FileItemProps {
   file: FileItemType;
   isSelectable?: boolean;
   isSelected?: boolean;
   onSelect?: (e: MouseEvent) => void;
-  onOpenContextMenu?: (file: FileItemType, event: MouseEvent) => void;
+  onOpenContextMenu?: (file: FileItemType, e: MouseEvent) => void;
   onDoubleClick?: (file: FileItemType) => void;
 }
 
@@ -17,51 +134,15 @@ export default function FileItem(props: FileItemProps) {
   const navigate = useNavigate();
   const [isHovering, setIsHovering] = createSignal(false);
   
-  const getFileIcon = () => {
-    switch (props.file.type) {
-      case 'folder':
-        return (
-          <svg class="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-          </svg>
-        );
-      case 'image':
-        return (
-          <svg class="h-10 w-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        );
-      case 'document':
-        return (
-          <svg class="h-10 w-10 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-        );
-      case 'spreadsheet':
-        return (
-          <svg class="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-          </svg>
-        );
-      case 'presentation':
-        return (
-          <svg class="h-10 w-10 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-          </svg>
-        );
-      case 'pdf':
-        return (
-          <svg class="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          </svg>
-        );
-      default:
-        return (
-          <svg class="h-10 w-10 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          </svg>
-        );
-    }
+  // Get the appropriate color and icon for the file type
+  const getFileTypeColor = (file: FileItemType) => {
+    if (file.isFolder) return fileTypeColors['folder'];
+    return fileTypeColors[file.mimeType] || fileTypeColors['default'];
+  };
+
+  const getFileTypeIcon = (file: FileItemType) => {
+    if (file.isFolder) return fileTypeIcons['folder'];
+    return fileTypeIcons[file.mimeType] || fileTypeIcons['default'];
   };
 
   const formatDate = (dateString: string) => {
@@ -96,6 +177,7 @@ export default function FileItem(props: FileItemProps) {
   
   const handleContextMenu = (event: MouseEvent) => {
     event.preventDefault();
+    event.stopPropagation();
     
     if (props.onOpenContextMenu) {
       props.onOpenContextMenu(props.file, event);
@@ -104,36 +186,27 @@ export default function FileItem(props: FileItemProps) {
   
   return (
     <div
-      class={`file-item ${props.isSelected ? 'selected' : ''}`}
+      class={`flex items-center p-2 rounded-lg cursor-pointer transition-colors duration-200
+        ${props.isSelected ? 'bg-primary/20' : 'hover:bg-primary/10'}`}
       onClick={handleClick}
-      onDblClick={handleDoubleClick}
       onContextMenu={handleContextMenu}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
-      tabIndex={0}
+      onDblClick={handleDoubleClick}
       role="listitem"
-      aria-label={props.file.name}
       aria-selected={props.isSelected}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleDoubleClick(e as unknown as MouseEvent);
-        }
-      }}
     >
-      <div class="file-icon">
-        {getFileIcon()}
+      <div class="flex items-center flex-1 min-w-0">
+        <div class={`mr-3 text-2xl ${getFileTypeColor(props.file)}`}>
+          {getFileTypeIcon(props.file)}
       </div>
-      
-      <div class="flex-grow min-w-0">
-        <div class="text-sm font-medium truncate">
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium text-text truncate" title={props.file.name}>
           {props.file.name}
         </div>
-        
-        <div class="text-xs text-text-muted mt-1 flex space-x-2">
-          <span>{formatFileSize(props.file.size)}</span>
-          <span>•</span>
-          <span>{formatDate(props.file.updatedAt)}</span>
+          <Show when={!props.file.isFolder}>
+            <div class="text-xs text-text-muted">
+              {formatFileSize(props.file.size)} • {formatDate(props.file.updatedAt)}
+            </div>
+          </Show>
         </div>
       </div>
       

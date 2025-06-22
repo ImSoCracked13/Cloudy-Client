@@ -1,8 +1,11 @@
 // Use mock websocket for development
-const USE_MOCK_WEBSOCKET = true;
+const USE_MOCK_WEBSOCKET = import.meta.env.VITE_USE_MOCK_WEBSOCKET === 'true' || true;
 
 type MessageHandler = (data: any) => void;
 
+/**
+ * WebSocket service for real-time updates
+ */
 export class WebSocketService {
   private socket: WebSocket | null = null;
   private isConnected = false;
@@ -14,11 +17,14 @@ export class WebSocketService {
   private mockHandlers: Map<string, (() => void)[]> = new Map();
 
   constructor() {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const apiUrl = import.meta.env.VITE_BACKEND_URL || 'https://cloudy-server.fly.dev';
     // Convert http:// to ws:// or https:// to wss://
     this.url = apiUrl.replace(/^http/, 'ws') + '/ws';
   }
 
+  /**
+   * Connect to WebSocket server
+   */
   connect(authToken: string): Promise<void> {
     if (USE_MOCK_WEBSOCKET) {
       return this.mockConnect();
@@ -61,9 +67,11 @@ export class WebSocketService {
     });
   }
 
+  /**
+   * Create a mock WebSocket connection for development
+   */
   private mockConnect(): Promise<void> {
     return new Promise((resolve) => {
-      // Simulate connection delay
       setTimeout(() => {
         this.isConnected = true;
         console.log('Mock WebSocket connection established');
@@ -72,34 +80,31 @@ export class WebSocketService {
     });
   }
 
+  /**
+   * Attempt to reconnect to WebSocket server
+   */
   private attemptReconnect(): void {
-    if (USE_MOCK_WEBSOCKET) {
-      this.mockConnect();
-      return;
-    }
-    
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       console.log('Maximum reconnect attempts reached');
       return;
     }
 
-    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
-    this.reconnectAttempts++;
-
-    console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`);
-    
     if (this.reconnectTimeout !== null) {
       clearTimeout(this.reconnectTimeout);
     }
-    
+
+    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+    console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
+
     this.reconnectTimeout = window.setTimeout(() => {
-      const authToken = localStorage.getItem('authToken') || '';
-      this.connect(authToken).catch(error => {
-        console.error('Reconnect failed:', error);
-      });
+      this.reconnectAttempts++;
+      this.connect(localStorage.getItem('authToken') || '');
     }, delay);
   }
 
+  /**
+   * Disconnect from WebSocket server
+   */
   disconnect(): void {
     if (USE_MOCK_WEBSOCKET) {
       this.isConnected = false;
@@ -118,6 +123,9 @@ export class WebSocketService {
     }
   }
 
+  /**
+   * Register a message handler
+   */
   on(event: string, handler: MessageHandler): void {
     if (!this.messageHandlers.has(event)) {
       this.messageHandlers.set(event, []);
@@ -125,32 +133,56 @@ export class WebSocketService {
     this.messageHandlers.get(event)?.push(handler);
   }
 
+  /**
+   * Remove a message handler
+   */
   off(event: string, handler: MessageHandler): void {
     if (!this.messageHandlers.has(event)) return;
     
-    const handlers = this.messageHandlers.get(event) || [];
-    const index = handlers.indexOf(handler);
+    const handlers = this.messageHandlers.get(event);
+    if (!handlers) return;
     
+    const index = handlers.indexOf(handler);
     if (index !== -1) {
       handlers.splice(index, 1);
     }
   }
 
+  /**
+   * Handle incoming WebSocket message
+   */
   private handleMessage(message: any): void {
-    const { type, data } = message;
+    // Handle Elysia middleware response format
+    if (message.beforeHandle && Array.isArray(message.beforeHandle)) {
+      console.log('Detected Elysia middleware response format in WebSocket message');
+      
+      // Extract non-null data from beforeHandle array
+      const nonNullData = message.beforeHandle.filter((item: any) => item !== null);
+      if (nonNullData.length > 0) {
+        // Get the last non-null item as the real response
+        message = nonNullData[nonNullData.length - 1];
+      }
+    }
     
-    if (this.messageHandlers.has(type)) {
-      const handlers = this.messageHandlers.get(type) || [];
-      handlers.forEach(handler => {
-        try {
-          handler(data);
-        } catch (error) {
-          console.error(`Error in handler for event ${type}:`, error);
-        }
-      });
+    if (!message.type) {
+      console.error('Invalid WebSocket message format, missing type:', message);
+      return;
+    }
+
+    const handlers = this.messageHandlers.get(message.type) || [];
+    
+    for (const handler of handlers) {
+      try {
+        handler(message.data);
+      } catch (error) {
+        console.error(`Error in WebSocket handler for ${message.type}:`, error);
+      }
     }
   }
 
+  /**
+   * Send a message to the WebSocket server
+   */
   send(type: string, data: any): void {
     if (USE_MOCK_WEBSOCKET) {
       console.log('Mock WebSocket message sent:', { type, data });
@@ -184,10 +216,13 @@ export class WebSocketService {
     }
   }
 
+  /**
+   * Check if WebSocket is connected
+   */
   isConnectedStatus(): boolean {
     return this.isConnected;
   }
 }
 
 // Create a singleton instance
-export const websocketService = new WebSocketService(); 
+export const webSocketService = new WebSocketService(); 

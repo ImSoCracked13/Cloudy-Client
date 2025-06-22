@@ -6,6 +6,7 @@ export interface User {
   isVerified: boolean;
   authProvider: 'local' | 'google';
   googleId?: string | null;
+  avatar?: string | null;
   storageUsed: number; // in bytes
   storageLimit: number; // in bytes (5GB default)
   formattedStorageUsed?: string;

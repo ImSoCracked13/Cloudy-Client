@@ -1,5 +1,5 @@
 import { For, createSignal, createEffect, Show } from 'solid-js';
-import { FileItem as FileItemType } from '../types/file';
+import { FileItem as FileItemType } from '../types/fileType';
 import FileItem from './FileItem';
 import FileContextMenu from './FileContextMenu';
 import Spinner from '../widgets/Spinner';
@@ -22,6 +22,7 @@ interface FileListProps {
   onContextMenu?: (item: FileItemType, e: MouseEvent) => void;
   selectedItems?: FileItemType[];
   onSelectItem?: (item: FileItemType, isMultiSelect: boolean) => void;
+  isBin?: boolean; // Add optional isBin property
 }
 
 export default function FileList(props: FileListProps) {
@@ -100,6 +101,7 @@ export default function FileList(props: FileListProps) {
   // Handle context menu
   const handleContextMenu = (file: FileItemType, e: MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     
     // If the file is not already selected, select only this file
     if (!selectedFiles().includes(file.id)) {
@@ -110,6 +112,11 @@ export default function FileList(props: FileListProps) {
       file,
       position: { x: e.clientX, y: e.clientY }
     });
+    
+    // If there's a parent context menu handler, call it
+    if (props.onContextMenu) {
+      props.onContextMenu(file, e);
+    }
   };
   
   // Close context menu
@@ -188,7 +195,7 @@ export default function FileList(props: FileListProps) {
                   isSelected={selectedFiles().includes(item.id)}
                   onSelect={(e) => handleFileSelect(item, e as MouseEvent)}
                   onOpenContextMenu={(f, e) => handleContextMenu(f, e)}
-                  onDoubleClick={() => handleItemClick(item)}
+                  onDoubleClick={(f) => handleItemClick(f)}
                 />
               )}
             </For>
@@ -202,11 +209,43 @@ export default function FileList(props: FileListProps) {
           file={contextMenu()!.file}
           position={contextMenu()!.position}
           onClose={closeContextMenu}
-          onReload={() => handleItemClick(contextMenu()!.file)}
+          onReload={() => {
+            props.onFileClick(contextMenu()!.file);
+            closeContextMenu();
+          }}
           onViewDetails={(file) => {
             props.onFileProperties(file);
             closeContextMenu();
           }}
+          onPreview={(file) => {
+            props.onFilePreview?.(file);
+            closeContextMenu();
+          }}
+          onDownload={(file) => {
+            props.onFileDownload(file);
+            closeContextMenu();
+          }}
+          onRename={(newName) => {
+            props.onFileRename(contextMenu()!.file, newName);
+            closeContextMenu();
+          }}
+          onDuplicate={(file) => {
+            props.onFileDuplicate?.(file);
+            closeContextMenu();
+          }}
+          onDelete={(file) => {
+            props.onFileDelete(file);
+            closeContextMenu();
+          }}
+          onRestore={(file) => {
+            props.onFileRestore?.(file);
+            closeContextMenu();
+          }}
+          onDeleteForever={(file) => {
+            props.onFileDeleteForever?.(file);
+            closeContextMenu();
+          }}
+          isBin={props.isBin || props.currentPath === '/bin' || contextMenu()!.file.isInBin}
         />
       </Show>
     </div>

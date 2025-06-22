@@ -1,9 +1,11 @@
-import { createSignal, onMount } from 'solid-js';
+import { createSignal, onMount, createEffect } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import Button from '../components/widgets/Button';
 import { authGateway } from '../components/gateway/authGateway';
 import { notificationService } from '../components/common/Notification';
 import { emailService } from '../components/services/emailService';
+import { isEmailJSReady } from '../App';
+import { useTheme } from '../components/context/ThemeContext';
 
 export default function VerificationPending() {
   const navigate = useNavigate();
@@ -11,6 +13,60 @@ export default function VerificationPending() {
   const [username, setUsername] = createSignal('');
   const [isResending, setIsResending] = createSignal(false);
   const [resendMessage, setResendMessage] = createSignal('');
+  const [emailAlreadySent, setEmailAlreadySent] = createSignal(false);
+  const [initialEmailSent, setInitialEmailSent] = createSignal(false);
+  const themeContext = useTheme();
+  const isNeonTheme = () => themeContext?.theme() === 'neon';
+  
+  // Attempt to send the email when EmailJS is ready, but only once
+  createEffect(async () => {
+    if (isEmailJSReady() && email() && !initialEmailSent()) {
+      console.log('EmailJS is now initialized, checking if verification email needed...');
+      
+      // Check if an email was recently sent
+      const sentTimestamp = localStorage.getItem(`verification_email_sent_${email()}`);
+      if (sentTimestamp) {
+        const timeSinceLastSent = Date.now() - parseInt(sentTimestamp);
+        // If we sent an email in the last 5 minutes, don't send another one
+        if (timeSinceLastSent < 5 * 60 * 1000) {
+          console.log('Email already sent recently, skipping automatic send');
+          setEmailAlreadySent(true);
+          setInitialEmailSent(true);
+          setResendMessage('A verification email was recently sent. Please check your inbox and spam folders.');
+          return;
+        }
+      }
+      
+      // Mark that we've attempted the initial email to prevent duplicate attempts
+      setInitialEmailSent(true);
+      
+      // Only send if not already sent during registration
+      const registrationEmailSent = localStorage.getItem(`registration_email_sent_${email()}`);
+      if (registrationEmailSent) {
+        console.log('Email was already sent during registration, skipping duplicate send');
+        setEmailAlreadySent(true);
+        setResendMessage('A verification email was already sent during registration. Please check your inbox and spam folders.');
+        return;
+      }
+      
+      const emailSent = await sendVerificationEmail(false);
+      
+      // If regular flow fails, try direct method
+      if (!emailSent) {
+        console.log('Regular flow failed in createEffect, trying direct verification email');
+        const directSent = await sendDirectVerificationEmail();
+        
+        if (directSent) {
+          console.log('Direct verification email sent successfully via createEffect');
+          setEmailAlreadySent(true);
+        } else {
+          console.warn('Both verification methods failed in createEffect');
+        }
+      } else {
+        setEmailAlreadySent(true);
+      }
+    }
+  });
   
   onMount(async () => {
     // Get the email from localStorage that was saved during registration
@@ -26,27 +82,56 @@ export default function VerificationPending() {
         setUsername(pendingEmail.split('@')[0]);
       }
       
-      // Try to send the initial verification email using EmailJS
-      await sendVerificationEmail(false);
+      // Check localStorage to see if we've already sent an email to this address
+      const sentTimestamp = localStorage.getItem(`verification_email_sent_${pendingEmail}`);
+      if (sentTimestamp) {
+        const timeSinceLastSent = Date.now() - parseInt(sentTimestamp);
+        // If we sent an email in the last 5 minutes, don't send another one
+        if (timeSinceLastSent < 5 * 60 * 1000) {
+          console.log('Email already sent recently, skipping automatic send');
+          setEmailAlreadySent(true);
+          setInitialEmailSent(true);
+          setResendMessage('A verification email was recently sent. Please check your inbox and spam folders.');
+          return;
+        }
+      }
+      
+      // Check if email was sent during registration
+      const registrationEmailSent = localStorage.getItem(`registration_email_sent_${pendingEmail}`);
+      if (registrationEmailSent) {
+        console.log('Email was already sent during registration, skipping duplicate send');
+        setEmailAlreadySent(true);
+        setInitialEmailSent(true);
+        setResendMessage('A verification email was already sent during registration. Please check your inbox and spam folders.');
+      }
     } else {
       // If no email is found, redirect to login
       navigate('/login');
     }
+    
+    // The createEffect will handle the email sending once everything is ready
   });
   
   const sendVerificationEmail = async (showNotification = true) => {
     if (!email()) return false;
     
     try {
-      // Send the email using our EmailJS service
+      console.log('Attempting to send verification email to:', email());
+      
+      // Send the email using our EmailJS service - ensure we use name instead of username
       const success = await emailService.sendVerificationEmailWithToken(
         email(),
         username() || email().split('@')[0]
       );
       
-      if (success && showNotification) {
-        notificationService.success('Verification email has been sent');
-        setResendMessage('Verification email has been sent. Please check your inbox.');
+      if (success) {
+        if (showNotification) {
+          notificationService.success('Verification email has been sent');
+          setResendMessage('Verification email has been sent. Please check your inbox.');
+        }
+        // Record that we sent an email
+        localStorage.setItem(`verification_email_sent_${email()}`, Date.now().toString());
+        setEmailAlreadySent(true);
       }
       
       return success;
@@ -59,37 +144,113 @@ export default function VerificationPending() {
     }
   };
   
+  const sendDirectVerificationEmail = async () => {
+    if (!email()) return false;
+    
+    try {
+      setIsResending(true);
+      console.log('Sending direct verification email to:', email());
+      
+      // Sanitize email
+      const sanitizedEmail = email().trim();
+      if (!sanitizedEmail.includes('@')) {
+        console.error('Invalid email format:', sanitizedEmail);
+        setResendMessage('Invalid email format. Please use a valid email address.');
+        return false;
+      }
+      
+      // Create a verification token manually
+      const manualToken = btoa(`${sanitizedEmail}-${Date.now()}`).replace(/=/g, '');
+      console.log('Created manual verification token:', manualToken);
+      
+      // Generate verification link
+      const frontendUrl = import.meta.env.VITE_FRONTEND_URL || 'http://localhost:3001';
+      const verificationLink = `${frontendUrl}/verify-email?token=${encodeURIComponent(manualToken)}&email=${encodeURIComponent(sanitizedEmail)}`;
+      
+      console.log('Direct verification link:', verificationLink);
+      
+      // Send email directly with EmailJS
+      try {
+        // Ensure we use the correct parameter order and names matching the EmailJS template
+        const userName = username() || sanitizedEmail.split('@')[0];
+        await emailService.sendVerificationEmail(
+          sanitizedEmail,
+          userName,
+          verificationLink
+        );
+        
+        notificationService.success('Verification email has been sent directly');
+        setResendMessage('Verification email has been sent. Please check your inbox.');
+        // Record that we sent an email
+        localStorage.setItem(`verification_email_sent_${email()}`, Date.now().toString());
+        setEmailAlreadySent(true);
+        
+        return true;
+      } catch (emailError) {
+        console.error('Error sending direct verification email:', emailError);
+        setResendMessage('Failed to send verification email. Please try again or contact support.');
+        return false;
+      }
+    } catch (error) {
+      console.error('Direct verification email error:', error);
+      setResendMessage('Failed to create verification email. Please try again.');
+      return false;
+    } finally {
+      setIsResending(false);
+    }
+  };
+  
   const handleResendEmail = async () => {
     if (!email()) return;
     
+    // Don't allow sending if an email was sent within the last minute
+    const sentTimestamp = localStorage.getItem(`verification_email_sent_${email()}`);
+    if (sentTimestamp) {
+      const timeSinceLastSent = Date.now() - parseInt(sentTimestamp);
+      if (timeSinceLastSent < 60 * 1000) { // 1 minute cooldown
+        notificationService.warning('Please wait at least 1 minute before requesting another email');
+        setResendMessage('Please wait a moment before requesting another email.');
+        return;
+      }
+    }
+    
     setIsResending(true);
     setResendMessage('');
+    // Reset the sent flag when user explicitly requests a resend
+    setEmailAlreadySent(false);
     
     try {
-      // First try with EmailJS
-      const emailJsSent = await sendVerificationEmail(true);
+      // Try the server's email method first as it's more reliable
+      console.log('Trying server email endpoint');
+      const result = await authGateway.resendVerificationEmail(email());
       
-      // If EmailJS fails, fall back to the server's email method
-      if (!emailJsSent) {
-        const result = await authGateway.resendVerificationEmail(email());
-        
-        if (result) {
-          notificationService.success('Verification email has been resent');
-          setResendMessage('Verification email has been resent. Please check your inbox.');
-        } else {
-          setResendMessage('Failed to resend verification email. Please try again.');
-        }
+      if (result) {
+        notificationService.success('Verification email sent successfully');
+        setResendMessage('Verification email has been sent. Please check your inbox.');
+        localStorage.setItem(`verification_email_sent_${email()}`, Date.now().toString());
+        setIsResending(false);
+        return;
+      }
+      
+      // Fallback to client-side email sending
+      console.log('Server endpoint failed, trying client-side email');
+      const clientSideResult = await sendVerificationEmail(true);
+      
+      if (!clientSideResult) {
+        // Last resort - try direct method
+        console.log('Client-side method failed, trying direct method');
+        await sendDirectVerificationEmail();
       }
     } catch (error) {
-      console.error('Failed to resend verification email:', error);
-      setResendMessage('Failed to resend verification email. Please try again.');
+      console.error('Error resending verification email:', error);
+      setResendMessage('Failed to resend verification email. Please try again later.');
     } finally {
       setIsResending(false);
     }
   };
 
   return (
-    <div class="min-h-screen bg-background flex items-center justify-center p-4">
+    <div class={`min-h-screen flex items-center justify-center p-4 ${isNeonTheme() ? 'neon-theme' : ''}`}>
       <div class="w-full max-w-md">
         <div class="bg-background-darker rounded-lg shadow-lg p-8 text-center">
           <div class="flex justify-center mb-6">
@@ -111,23 +272,32 @@ export default function VerificationPending() {
             </p>
             
             <Button 
-              variant="secondary" 
-              onClick={handleResendEmail} 
+              onClick={handleResendEmail}
               disabled={isResending()}
+              variant="primary"
+              class="w-full"
             >
               {isResending() ? 'Sending...' : 'Resend Verification Email'}
             </Button>
             
             {resendMessage() && (
-              <p class="mt-2 text-sm text-primary">
+              <p class="mt-2 text-sm text-text-muted">
                 {resendMessage()}
               </p>
             )}
           </div>
           
-          <div class="border-t border-background pt-6">
-            <Button variant="secondary" onClick={() => navigate('/login')}>
-              Return to Login
+          <div class="border-t border-border pt-6">
+            <p class="text-sm text-text-muted mb-4">
+              Already verified your email?
+            </p>
+            
+            <Button
+              onClick={() => navigate('/login')}
+              variant="secondary"
+              class="w-full"
+            >
+              Go to Login
             </Button>
           </div>
         </div>

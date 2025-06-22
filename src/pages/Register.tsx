@@ -3,56 +3,99 @@ import { A, useNavigate } from '@solidjs/router';
 import AuthForm from '../components/auth/AuthForm';
 import { useAuth } from '../components/context/AuthContext';
 import { notificationService } from '../components/common/Notification';
+import { authGateway } from '../components/gateway/authGateway';
+import { emailService } from '../components/services/emailService';
 
 export default function Register() {
   const { register, state } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = createSignal('');
+  const [isSubmitting, setIsSubmitting] = createSignal(false);
 
   const handleSubmit = async (email: string, password: string, username?: string) => {
     setError('');
-    console.log('Register form submitted:', { email, username, passwordLength: password?.length });
+    setIsSubmitting(true);
+    console.log('Register form validated, submitting with:', { email, username, passwordLength: password?.length });
     
     try {
       if (!username) {
         throw new Error('Username is required');
       }
       
-      console.log('Calling register function with:', { username, email });
+      // Check if account already exists before attempting registration
+      try {
+        console.log('Checking if account already exists for:', email);
+        const accountExists = await authGateway.checkAccountExists(email);
+        
+        if (accountExists) {
+          console.log('ACCOUNT ALREADY EXISTS: Preventing registration and verification email', { email });
+          throw new Error('An account with this email already exists. Please use a different email or login instead.');
+        }
+      } catch (checkError) {
+        // If the error specifically mentions "already exists", throw it immediately
+        if (checkError instanceof Error && checkError.message.includes('already exists')) {
+          throw checkError;
+        }
+        // Otherwise continue with registration attempt (the check might have failed for other reasons)
+        console.warn('Account existence check failed, continuing with registration:', checkError);
+      }
+      
+      console.log('Register form submitted:', { email, username });
       const result = await register(username, email, password);
       console.log('Register result:', result);
       
-      if (result.user) {
-        notificationService.success('Registration successful!');
+      // Clear any previous verification data
+      localStorage.removeItem(`verification_email_sent_${email}`);
+      
+      // Store email and username in localStorage for the verification pending page
+      localStorage.setItem('pendingVerificationEmail', email);
+      localStorage.setItem('pendingVerificationUsername', username);
+      
+      // Attempt to send verification email directly as a fallback
+      try {
+        console.log('Attempting to send verification email directly');
+        const emailSent = await emailService.sendVerificationEmailWithToken(email, username);
         
-        // For local auth provider, always check verification status
-        const needsVerification = 
-          result.verificationRequired || 
-          (result.user.authProvider === 'local' && !result.user.isVerified);
-        
-        console.log('Verification check:', { 
-          resultVerificationRequired: result.verificationRequired,
-          userAuthProvider: result.user.authProvider,
-          userIsVerified: result.user.isVerified,
-          needsVerification
-        });
-        
-        if (needsVerification) {
-          // Store email and username in localStorage for the verification pending page
-          localStorage.setItem('pendingVerificationEmail', email);
-          localStorage.setItem('pendingVerificationUsername', username);
-          // Redirect to verification pending page
-          navigate('/verification-pending');
-        } else {
-          navigate('/drive');
+        if (emailSent) {
+          // Mark that we sent a verification email during registration
+          localStorage.setItem(`verification_email_sent_${email}`, Date.now().toString());
+          localStorage.setItem(`registration_email_sent_${email}`, 'true');
+          console.log('Verification email sent during registration');
         }
-      } else {
-        // If no user returned but no error thrown, show generic message
-        setError('Registration failed. Please try again.');
+      } catch (emailError) {
+        console.error('Failed to send verification email directly:', emailError);
+        // Continue with the flow even if email sending fails
       }
+      
+      // Always show success message and redirect
+      notificationService.success('Registration successful! Please verify your email.');
+      
+      // Force a small delay to ensure notifications are visible before redirect
+      setTimeout(() => {
+        navigate('/verification-pending');
+      }, 1000);
     } catch (err) {
       console.error('Registration error:', err);
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      
+      // Check for specific error types
+      const errorMessage = err instanceof Error ? err.message : 'Registration failed';
+      
+      if (errorMessage.includes('already exists')) {
+        console.log('ACCOUNT ALREADY EXISTS: Preventing verification email sending', { email });
+        setError('An account with this email already exists. Please use a different email or login instead.');
+        // Do not navigate to verification page - stay on registration page
+      } else if (errorMessage.includes('Password must be at least 8 characters')) {
+        setError('Password must be at least 8 characters long.');
+      } else if (errorMessage.includes('one letter and one number')) {
+        setError('Password must contain at least one letter and one number.');
+      } else {
+        setError(errorMessage);
+      }
+      
+      // Show notification for validation errors
+      notificationService.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -73,7 +116,7 @@ export default function Register() {
         <AuthForm 
           type="register"
           onSubmit={handleSubmit}
-          isLoading={state.isLoading}
+          isLoading={isSubmitting() || state.isLoading}
         />
         
         <div class="text-center mt-6">

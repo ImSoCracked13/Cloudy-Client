@@ -1,6 +1,6 @@
 import { createSignal } from 'solid-js';
 import { notificationService } from '../common/Notification';
-import { formatFileSize } from '../common/formatFileSize';
+import { formatFileSize } from '../utilities/fileSizeFormatter';
 
 export interface DragDropOptions {
   maxFileSize?: number;

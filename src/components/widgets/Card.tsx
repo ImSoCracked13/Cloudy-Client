@@ -1,4 +1,5 @@
 import { JSX } from 'solid-js';
+import { useTheme } from '../context/ThemeContext';
 
 interface CardProps {
   title?: string;
@@ -11,16 +12,25 @@ interface CardProps {
 }
 
 export default function Card(props: CardProps) {
+  const { theme } = useTheme();
   const variant = props.variant || 'default';
   
   const getVariantClasses = () => {
+    const isNeon = theme() === 'neon';
+    
     switch (variant) {
       case 'elevated':
-        return 'bg-background-darker shadow-lg border border-background-light/15 shadow-black/20';
+        return isNeon 
+          ? 'bg-background-darker/80 shadow-lg border border-primary/20 shadow-primary/20' 
+          : 'bg-background-darker shadow-lg border border-background-light/15 shadow-black/20';
       case 'outlined':
-        return 'bg-transparent border-2 border-background-light/30';
+        return isNeon
+          ? 'bg-transparent border-2 border-primary/30'
+          : 'bg-transparent border-2 border-background-light/30';
       default:
-        return 'bg-background-darker border border-background-light/15 shadow-md shadow-black/10';
+        return isNeon
+          ? 'bg-background-darker/80 border border-primary/20 shadow-md shadow-primary/10'
+          : 'bg-background-darker border border-background-light/15 shadow-md shadow-black/10';
     }
   };
 
@@ -30,6 +40,7 @@ export default function Card(props: CardProps) {
         rounded-lg overflow-hidden
         ${getVariantClasses()}
         ${props.hoverable ? 'hover:translate-y-[-3px] hover:shadow-xl transition-all duration-300 cursor-pointer' : ''}
+        ${theme() === 'neon' ? 'card' : ''}
         ${props.class || ''}
       `}
       onClick={props.onClick}
@@ -44,7 +55,7 @@ export default function Card(props: CardProps) {
       } : undefined}
     >
       {props.title && (
-        <div class="border-b border-background-light/20 p-4">
+        <div class={`border-b ${theme() === 'neon' ? 'border-primary/20' : 'border-background-light/20'} p-4`}>
           <h3 class="text-lg font-semibold text-text">{props.title}</h3>
         </div>
       )}
@@ -54,7 +65,7 @@ export default function Card(props: CardProps) {
       </div>
       
       {props.footer && (
-        <div class="border-t border-background-light/20 p-4 bg-background-light/10">
+        <div class={`border-t ${theme() === 'neon' ? 'border-primary/20 bg-background-light/5' : 'border-background-light/20 bg-background-light/10'} p-4`}>
           {props.footer}
         </div>
       )}

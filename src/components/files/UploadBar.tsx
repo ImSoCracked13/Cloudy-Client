@@ -1,6 +1,6 @@
 import { createEffect, For, Show } from 'solid-js';
 import { useFileUpload } from '../hooks/useFileUpload';
-import { FileUploadProgress } from '../types/file';
+import { FileUploadProgress } from '../hooks/useFileUpload';
 
 export default function UploadBar() {
   const { isUploading, uploadProgress, clearUploadProgress } = useFileUpload();

@@ -1,13 +1,16 @@
 import { createSignal, createEffect, onMount, Show, For } from 'solid-js';
 import { fileGateway } from '../components/gateway/fileGateway';
-import { StorageStats, StorageTypeBreakdown } from '../components/types/file';
+import { StorageStats, StorageTypeBreakdown } from '../components/types/fileType';
 import Card from '../components/widgets/Card';
 import Spinner from '../components/widgets/Spinner';
 import StorageUsageBar from '../components/widgets/StorageUsageBar';
+import { notificationService } from '../components/common/Notification';
 
 export default function Storage() {
   const [stats, setStats] = createSignal<StorageStats | null>(null);
   const [isLoading, setIsLoading] = createSignal(true);
+  const [isFixingDrive, setIsFixingDrive] = createSignal(false);
+  const [isSyncingStorage, setIsSyncingStorage] = createSignal(false);
   
   onMount(() => {
     loadStorageStats();
@@ -24,6 +27,44 @@ export default function Storage() {
       console.error('Error loading storage stats:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  const handleFixDuplicatedDriveFolders = async () => {
+    setIsFixingDrive(true);
+    try {
+      const result = await fileGateway.fixDuplicatedDriveFolders();
+      if (result && result.success) {
+        if (result.data?.fixed) {
+          notificationService.success('Successfully fixed duplicated Drive folders');
+        } else {
+          notificationService.info('No duplicated Drive folders were found');
+        }
+      } else {
+        notificationService.error('Failed to fix duplicated Drive folders');
+      }
+    } catch (error) {
+      console.error('Error fixing duplicated Drive folders:', error);
+      notificationService.error('Error fixing duplicated Drive folders');
+    } finally {
+      setIsFixingDrive(false);
+    }
+  };
+
+  const handleSyncStorage = async () => {
+    setIsSyncingStorage(true);
+    try {
+      const result = await fileGateway.syncStorage();
+      if (result && result.success) {
+        notificationService.success('Storage synchronized successfully');
+      } else {
+        notificationService.error('Failed to synchronize storage');
+      }
+    } catch (error) {
+      console.error('Error synchronizing storage:', error);
+      notificationService.error('Error synchronizing storage');
+    } finally {
+      setIsSyncingStorage(false);
     }
   };
   

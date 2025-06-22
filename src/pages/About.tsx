@@ -137,15 +137,8 @@ export default function About() {
             Our platform leverages cutting-edge technologies to deliver a fast, reliable, and secure file management experience:
           </p>
           
-          <div class="grid grid-cols-2 md:grid-cols-3 gap-8 mb-12">
-            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
-              <img src="/SolidJS.png" alt="SolidJS" class="h-16 mb-4" />
-              <h3 class="text-lg font-semibold text-text">Frontend: SolidJS</h3>
-              <p class="text-text-muted text-sm">
-                Reactive UI framework for building fast, efficient web applications
-              </p>
-            </div>
-            
+          <div class="grid grid-cols-4 gap-8 mb-12">
+            {/* 1 */}
             <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
               <img src="/ElysiaJS.png" alt="ElysiaJS" class="h-16 mb-4" />
               <h3 class="text-lg font-semibold text-text">Backend: ElysiaJS</h3>
@@ -153,39 +146,23 @@ export default function About() {
                 TypeScript framework for building fast and reliable APIs
               </p>
             </div>
-            
+            {/* 2 */}
+            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
+              <img src="/SolidJS.png" alt="SolidJS" class="h-16 mb-4" />
+              <h3 class="text-lg font-semibold text-text">Frontend: SolidJS</h3>
+              <p class="text-text-muted text-sm">
+                Reactive UI framework for building fast, efficient web applications
+              </p>
+            </div>
+            {/* 3 */}
             <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
               <img src="/BunJS.png" alt="BunJS" class="h-16 mb-4" />
               <h3 class="text-lg font-semibold text-text">Runtime: BunJS</h3>
               <p class="text-text-muted text-sm">
-                Fast JavaScript runtime and toolkit for modern development
+                Fast JavaScript package manager and toolkit for modern development
               </p>
             </div>
-            
-            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
-              <img src="/PostgreSQL.png" alt="PostgreSQL" class="h-16 mb-4" />
-              <h3 class="text-lg font-semibold text-text">Database: PostgreSQL</h3>
-              <p class="text-text-muted text-sm">
-                Powerful, open source object-relational database system
-              </p>
-            </div>
-            
-            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
-              <img src="/Redis.png" alt="Redis" class="h-16 mb-4" />
-              <h3 class="text-lg font-semibold text-text">Cache: Redis</h3>
-              <p class="text-text-muted text-sm">
-                In-memory data store for caching and session management
-              </p>
-            </div>
-
-            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
-              <img src="/MinIO.png" alt="MinIO" class="h-16 mb-4" />
-              <h3 class="text-lg font-semibold text-text">Storage: MinIO</h3>
-              <p class="text-text-muted text-sm">
-                High-performance, S3-compatible object storage
-              </p>
-            </div>
-            
+            {/* 4 */}
             <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
               <img src="/UnoCSS.png" alt="UnoCSS" class="h-16 mb-4" />
               <h3 class="text-lg font-semibold text-text">Styling: UnoCSS</h3>
@@ -193,15 +170,79 @@ export default function About() {
                 Instant atomic CSS engine for modern web development
               </p>
             </div>
-
+            {/* 5 */}
             <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
-              <img src="/EmailJS.png" alt="EmailJS" class="h-16 mb-4" />
-              <h3 class="text-lg font-semibold text-text">Verification: EmailJS</h3>
+              <img src="/PostgreSQL.png" alt="PostgreSQL" class="h-16 mb-4" />
+              <h3 class="text-lg font-semibold text-text">Database: PostgreSQL</h3>
               <p class="text-text-muted text-sm">
-                Email service for verification and sending mail
+                Powerful, open source object-relational database system
               </p>
             </div>
-
+            {/* 6 */}
+            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
+              <img src="/Redis.png" alt="Redis" class="h-16 mb-4" />
+              <h3 class="text-lg font-semibold text-text">Cache: Redis</h3>
+              <p class="text-text-muted text-sm">
+                In-memory data store for caching and session management
+              </p>
+            </div>
+            {/* 7 */}
+            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
+              <img src="/MinIO.png" alt="MinIO" class="h-16 mb-4" />
+              <h3 class="text-lg font-semibold text-text">Storage: MinIO</h3>
+              <p class="text-text-muted text-sm">
+                High-performance, S3-compatible object storage
+              </p>
+            </div>
+            {/* 8 */}
+            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
+              <img src="/AWS.png" alt="AWS" class="h-16 mb-4" />
+              <h3 class="text-lg font-semibold text-text">Storage Hosting: AWS</h3>
+              <p class="text-text-muted text-sm">
+                Reliable and scalable cloud infrastructure for storage and compute
+              </p>
+            </div>
+            {/* 9 */}
+            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
+              <img src="/Upstash.png" alt="Upstash" class="h-16 mb-4" />
+              <h3 class="text-lg font-semibold text-text">Cache Hosting: Upstash</h3>
+              <p class="text-text-muted text-sm">
+                Global, serverless Redis for caching and rate limiting
+              </p>
+            </div>
+            {/* 10 */}
+            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
+              <img src="/Supabase.png" alt="Supabase" class="h-16 mb-4" />
+              <h3 class="text-lg font-semibold text-text">Database Hosting: Supabase</h3>
+              <p class="text-text-muted text-sm">
+                Managed PostgreSQL with real-time and authentication features
+              </p>
+            </div>
+            {/* 11 */}
+            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
+              <img src="/Cloudlflare Pages.png" alt="Cloudflare Pages" class="h-16 mb-4" />
+              <h3 class="text-lg font-semibold text-text">Frontend Hosting: Cloudflare Pages</h3>
+              <p class="text-text-muted text-sm">
+                Edge-deployed static site hosting for ultra-fast delivery
+              </p>
+            </div>
+            {/* 12 */}
+            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
+              <img src="/Fly.io.png" alt="Fly.io" class="h-16 mb-4" />
+              <h3 class="text-lg font-semibold text-text">Backend Hosting: Fly.io</h3>
+              <p class="text-text-muted text-sm">
+                Global app hosting platform for fast, scalable deployments
+              </p>
+            </div>
+            {/* 13 */}
+            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
+              <img src="/Docker.png" alt="Docker" class="h-16 mb-4" />
+              <h3 class="text-lg font-semibold text-text">Containerization: Docker</h3>
+              <p class="text-text-muted text-sm">
+                Standard for containerizing and deploying applications
+              </p>
+            </div>
+            {/* 14 */}
             <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
               <img src="/Vite.png" alt="Vite" class="h-16 mb-4" />
               <h3 class="text-lg font-semibold text-text">Development: Vite</h3>
@@ -209,7 +250,22 @@ export default function About() {
                 Local server for project template and efficient for bundling
               </p>
             </div>
-
+            {/* 15 */}
+            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
+              <img src="/Drizzle.png" alt="Drizzle ORM" class="h-16 mb-4" />
+              <h3 class="text-lg font-semibold text-text">ORM: Drizzle</h3>
+              <p class="text-text-muted text-sm">
+                Type-safe ORM for PostgreSQL and modern TypeScript projects
+              </p>
+            </div>
+            {/* 16 */}
+            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
+              <img src="/EmailJS.png" alt="EmailJS" class="h-16 mb-4" />
+              <h3 class="text-lg font-semibold text-text">Email Service: EmailJS</h3>
+              <p class="text-text-muted text-sm">
+                Open-source mailing resources for token verifications and auto responses
+              </p>
+            </div>
           </div>
         </div>
       </section>

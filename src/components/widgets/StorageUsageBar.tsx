@@ -1,5 +1,5 @@
 import { createMemo } from 'solid-js';
-import { formatFileSize } from '../utilities/formatFileSize';
+import { formatFileSize } from '../utilities/fileSizeFormatter';
 
 interface StorageUsageBarProps {
   used?: number;

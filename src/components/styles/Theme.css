@@ -32,6 +32,124 @@
   --border-color: rgba(255, 255, 255, 0.1);
 }
 
+/* Neon Theme Variables */
+.neon-theme {
+  /* Main colors */
+  --color-primary: #00ffcc;
+  --color-primary-hover: #00e6b8;
+  --color-secondary: #ff00ff;
+  --color-secondary-hover: #e600e6;
+  
+  /* Background with gradient */
+  --color-background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+  --color-background-darker: #0f0f1a;
+  --color-background-darkest: #090912;
+  --color-background-light: #1e1e32;
+  
+  /* Text colors */
+  --color-text: #ffffff;
+  --color-text-muted: #b8b8d9;
+  --color-text-link: #00ffff;
+  
+  /* Status colors with neon glow */
+  --color-success: #00ff88;
+  --color-danger: #ff3366;
+  --color-warning: #ffcc00;
+  
+  /* Neon glow effects */
+  --neon-glow-primary: 0 0 10px rgba(0, 255, 204, 0.7);
+  --neon-glow-secondary: 0 0 10px rgba(255, 0, 255, 0.7);
+  --neon-glow-text: 0 0 5px rgba(255, 255, 255, 0.5);
+  
+  /* Border color */
+  --border-color: rgba(0, 255, 204, 0.2);
+}
+
+/* Apply neon theme background to body and main elements */
+.neon-theme {
+  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+  background-attachment: fixed;
+  color: var(--color-text);
+}
+
+.neon-theme body {
+  background: transparent;
+  color: var(--color-text);
+}
+
+.neon-theme .layout-main {
+  background: transparent;
+}
+
+.neon-theme .layout-sidebar {
+  background: var(--color-background-darker);
+  border-right: 1px solid var(--border-color);
+}
+
+.neon-theme .layout-header {
+  background: var(--color-background-darkest);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Neon buttons */
+.neon-theme .btn-primary,
+.neon-theme button[type="submit"],
+.neon-theme .bg-primary {
+  background-color: var(--color-primary);
+  color: #000;
+  box-shadow: var(--neon-glow-primary);
+}
+
+.neon-theme .btn-primary:hover:not(:disabled),
+.neon-theme button[type="submit"]:hover:not(:disabled),
+.neon-theme .bg-primary:hover {
+  background-color: var(--color-primary-hover);
+  box-shadow: 0 0 15px rgba(0, 255, 204, 0.9);
+}
+
+.neon-theme .btn-secondary {
+  background-color: var(--color-secondary);
+  color: #000;
+  box-shadow: var(--neon-glow-secondary);
+}
+
+.neon-theme .btn-secondary:hover:not(:disabled) {
+  background-color: var(--color-secondary-hover);
+  box-shadow: 0 0 15px rgba(255, 0, 255, 0.9);
+}
+
+/* Neon text for headings */
+.neon-theme h1, 
+.neon-theme h2, 
+.neon-theme h3 {
+  color: var(--color-text);
+  text-shadow: var(--neon-glow-text);
+}
+
+/* Neon card styling */
+.neon-theme .card,
+.neon-theme .bg-background-darker {
+  background: rgba(15, 15, 26, 0.8);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 0 20px rgba(0, 255, 204, 0.15);
+}
+
+/* Neon form elements */
+.neon-theme input, 
+.neon-theme textarea, 
+.neon-theme select {
+  background-color: rgba(15, 15, 26, 0.6);
+  border: 1px solid var(--border-color);
+  color: var(--color-text);
+}
+
+.neon-theme input:focus, 
+.neon-theme textarea:focus, 
+.neon-theme select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 5px rgba(0, 255, 204, 0.5);
+}
+
 /* Base styles */
 body {
   font-family: Inter, 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;

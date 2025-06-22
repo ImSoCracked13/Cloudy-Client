@@ -26,10 +26,19 @@ export function ThemeProvider(props: { children: JSX.Element }) {
     if (currentTheme === 'dark') {
       document.documentElement.classList.add('dark-theme');
       document.documentElement.classList.remove('neon-theme');
+      // Reset to default from CSS
+      document.body.style.background = ''; 
+      document.body.style.color = '';
     } else {
       document.documentElement.classList.add('neon-theme');
       document.documentElement.classList.remove('dark-theme');
+      // Apply gradient background directly to body for better compatibility
+      document.body.style.background = 'linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%)';
+      document.body.style.backgroundAttachment = 'fixed'; // Keep gradient fixed when scrolling
+      document.body.style.color = 'var(--color-text)';
     }
+    
+    console.log(`Theme changed to: ${currentTheme}`);
   });
 
   const toggleTheme = () => {

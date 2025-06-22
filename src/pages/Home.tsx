@@ -73,6 +73,20 @@ export default function Home() {
           </A>
         </div>
       </section>
+
+      <section class="py-16 px-4 bg-background-darker">
+        <div class="max-w-6xl mx-auto">
+          <h2 class="text-3xl font-bold text-center mb-8">Take a look of Cloudy technologies!</h2>
+          <p class="text-xl mb-8 text-center">
+            With 16 technologies, Cloudy is built to be the a very reliable yet responsive storage solution.
+          </p>
+          <p class="text-xl mb-8 text-center">
+          <A href="/about" class="bg-primary hover:bg-primary-hover text-white px-6 py-3 rounded-md font-medium">
+            Check About Page
+          </A>
+          </p>
+        </div>
+      </section>
     </div>
   );
 } 

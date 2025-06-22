@@ -1,5 +1,5 @@
 import { createSignal, createEffect, onCleanup, Show, For } from 'solid-js';
-import { createStore, produce } from 'solid-js/store';
+import { createStore, SetStoreFunction, produce } from 'solid-js/store';
 
 export type NotificationType = 'success' | 'error' | 'info' | 'warning';
 

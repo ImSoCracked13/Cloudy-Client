@@ -1,4 +1,4 @@
-import { JSX, Show, createEffect, onCleanup } from 'solid-js';
+import { JSX, Show, createEffect, onCleanup, onMount } from 'solid-js';
 
 interface DialogProps {
   isOpen: boolean;
@@ -8,47 +8,70 @@ interface DialogProps {
   actions?: JSX.Element;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   preventClose?: boolean;
+  onOpen?: () => void;
+  id?: string;
 }
 
 export default function Dialog(props: DialogProps) {
   let dialogRef: HTMLDivElement | undefined;
   
-  const handleEscape = (e: KeyboardEvent) => {
+  const getDialogSizeClass = () => {
+    switch (props.size) {
+      case 'sm':
+        return 'max-w-sm';
+      case 'md':
+        return 'max-w-md';
+      case 'lg':
+        return 'max-w-lg';
+      case 'xl':
+        return 'max-w-xl';
+      case '2xl':
+        return 'max-w-2xl';
+      default:
+        return 'max-w-md';
+    }
+  };
+
+  // Handle keyboard events
+  const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape' && !props.preventClose) {
+      e.preventDefault();
       props.onClose();
     }
   };
 
-  const handleOutsideClick = (e: MouseEvent) => {
-    if (dialogRef && !dialogRef.contains(e.target as Node) && !props.preventClose) {
+  // Handle click outside
+  const handleClickOutside = (e: MouseEvent) => {
+    if (!props.preventClose && dialogRef && !dialogRef.contains(e.target as Node)) {
       props.onClose();
     }
   };
+
+  onMount(() => {
+    if (props.onOpen) {
+      props.onOpen();
+    }
+  });
 
   createEffect(() => {
     if (props.isOpen) {
-      document.addEventListener('keydown', handleEscape);
-      document.addEventListener('mousedown', handleOutsideClick);
-      document.body.style.overflow = 'hidden';
-    }
+      // Add event listeners with a small delay to prevent immediate triggering
+      setTimeout(() => {
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('mousedown', handleClickOutside);
+      }, 100);
 
-    onCleanup(() => {
-      document.removeEventListener('keydown', handleEscape);
-      document.removeEventListener('mousedown', handleOutsideClick);
-      document.body.style.overflow = '';
-    });
+      // Focus the dialog
+      if (dialogRef) {
+        dialogRef.focus();
+      }
+    }
   });
 
-  const getDialogSizeClass = () => {
-    switch (props.size) {
-      case 'sm': return 'max-w-md';
-      case 'md': return 'max-w-lg';
-      case 'lg': return 'max-w-2xl';
-      case 'xl': return 'max-w-4xl';
-      case '2xl': return 'max-w-6xl';
-      default: return 'max-w-lg';
-    }
-  };
+    onCleanup(() => {
+    document.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener('mousedown', handleClickOutside);
+  });
 
   return (
     <Show when={props.isOpen}>
@@ -57,6 +80,7 @@ export default function Dialog(props: DialogProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="dialog-title"
+        id={props.id}
       >
         <div 
           ref={dialogRef} 
@@ -74,7 +98,11 @@ export default function Dialog(props: DialogProps) {
             
             {!props.preventClose && (
               <button
-                onClick={props.onClose}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  props.onClose();
+                }}
                 class="text-text-muted hover:text-text focus:outline-none rounded-full hover:bg-background-light/30 p-1.5 transition-colors"
                 aria-label="Close dialog"
               >

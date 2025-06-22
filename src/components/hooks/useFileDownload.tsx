@@ -2,7 +2,7 @@ import { createSignal } from 'solid-js';
 import { saveAs } from 'file-saver';
 import { fileService } from '../services/fileService';
 import { notificationService } from '../common/Notification';
-import { formatFileSize } from '../utilities/formatFileSize';
+import { formatFileSize } from '../utilities/fileSizeFormatter';
 
 export function useFileDownload() {
   const [downloadProgress, setDownloadProgress] = createSignal(0);

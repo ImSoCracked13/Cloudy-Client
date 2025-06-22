@@ -13,6 +13,42 @@ export default function AuthForm(props: AuthFormProps) {
   const [confirmPassword, setConfirmPassword] = createSignal('');
   const [username, setUsername] = createSignal('');
   const [passwordError, setPasswordError] = createSignal('');
+  
+  // Add password strength indicator
+  const getPasswordStrength = (password: string) => {
+    if (!password) return 0;
+    
+    let strength = 0;
+    
+    // Length check (min 8 chars)
+    if (password.length >= 8) strength += 1;
+    
+    // Contains number
+    if (/\d/.test(password)) strength += 1;
+    
+    // Contains letter
+    if (/[a-zA-Z]/.test(password)) strength += 1;
+    
+    // Contains special character
+    if (/[^a-zA-Z0-9]/.test(password)) strength += 1;
+    
+    return strength;
+  };
+  
+  const getPasswordStrengthText = (strength: number) => {
+    if (strength === 0) return 'Very weak';
+    if (strength === 1) return 'Weak';
+    if (strength === 2) return 'Fair';
+    if (strength === 3) return 'Good';
+    return 'Strong';
+  };
+  
+  const getPasswordStrengthColor = (strength: number) => {
+    if (strength <= 1) return 'bg-danger';
+    if (strength === 2) return 'bg-warning';
+    if (strength === 3) return 'bg-success';
+    return 'bg-success';
+  };
 
   createEffect(() => {
     // Reset error when password changes
@@ -34,6 +70,17 @@ export default function AuthForm(props: AuthFormProps) {
       
       if (password().length < 8) {
         setPasswordError('Password must be at least 8 characters');
+        return;
+      }
+      
+      // Add validation for at least one letter and one number
+      if (!/\d/.test(password())) {
+        setPasswordError('Password must contain at least one number');
+        return;
+      }
+      
+      if (!/[a-zA-Z]/.test(password())) {
+        setPasswordError('Password must contain at least one letter');
         return;
       }
       
@@ -83,12 +130,13 @@ export default function AuthForm(props: AuthFormProps) {
         <input
           id={props.type === 'login' ? 'usernameOrEmail' : 'email'}
           name={props.type === 'login' ? 'usernameOrEmail' : 'email'}
-          type={props.type === 'login' ? 'text' : 'email'}
+          type={props.type === 'register' ? 'email' : 'text'}
           required
           value={usernameOrEmail()}
           onInput={(e) => setUsernameOrEmail(e.currentTarget.value)}
           class="w-full px-3 py-2 bg-background-darkest border border-background-light rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
           placeholder={props.type === 'login' ? 'Enter your username or email' : 'Enter your email'}
+          autocomplete={props.type === 'login' ? 'username' : 'email'}
         />
       </div>
 
@@ -106,6 +154,27 @@ export default function AuthForm(props: AuthFormProps) {
           class="w-full px-3 py-2 bg-background-darkest border border-background-light rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
           placeholder="Enter your password"
         />
+        {props.type === 'register' && (
+          <>
+            <div class="mt-1 mb-1">
+              <div class="w-full h-1 bg-background-light flex rounded-full overflow-hidden">
+                <div 
+                  class={`h-1 ${getPasswordStrengthColor(getPasswordStrength(password()))}`}
+                  style={{ width: `${getPasswordStrength(password()) * 25}%` }}
+                />
+              </div>
+              <div class="flex justify-between mt-1">
+                <span class="text-xs text-text-muted">Strength: {getPasswordStrengthText(getPasswordStrength(password()))}</span>
+                {getPasswordStrength(password()) >= 3 && (
+                  <span class="text-xs text-success">✓ Meets requirements</span>
+                )}
+              </div>
+            </div>
+            <p class="text-xs text-text-muted">
+              Password must be at least 8 characters long and contain at least one letter and one number.
+            </p>
+          </>
+        )}
       </div>
 
       {props.type === 'register' && (

@@ -1,6 +1,10 @@
 import { createSignal, Show, For } from 'solid-js';
 import { useFileUpload } from '../hooks/useFileUpload';
 import Button from '../widgets/Button';
+import Dialog from '../widgets/Dialog';
+import { fileService } from '../services/fileService';
+import { notificationService } from '../common/Notification';
+import DuplicateDialog, { DuplicateAction } from './DetectingDialog';
 
 interface UploadFormProps {
   currentFolderId: string | null;
@@ -11,7 +15,18 @@ interface UploadFormProps {
 export default function UploadForm(props: UploadFormProps) {
   const [files, setFiles] = createSignal<File[]>([]);
   const [isDragging, setIsDragging] = createSignal(false);
-  const { uploadFiles, isUploading } = useFileUpload();
+  const [showUploadDialog, setShowUploadDialog] = createSignal(false);
+  const [showDuplicateDialog, setShowDuplicateDialog] = createSignal(false);
+  const [duplicateAction, setDuplicateAction] = createSignal<'keep-both' | 'overwrite' | 'cancel'>('keep-both');
+  const [pendingFiles, setPendingFiles] = createSignal<File[]>([]);
+  const [existingFileNames, setExistingFileNames] = createSignal<string[]>([]);
+  
+  const { 
+    uploadFiles, 
+    uploadProgress, 
+    isUploading,
+    cancelOverwrite: hookCancelOverwrite 
+  } = useFileUpload();
   
   const handleFileChange = (e: Event) => {
     const input = e.target as HTMLInputElement;
@@ -47,13 +62,38 @@ export default function UploadForm(props: UploadFormProps) {
     }
   };
   
-  const handleDrop = (e: DragEvent) => {
+  const handleDrop = async (e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
     
     if (e.dataTransfer?.files?.length) {
-      setFiles(Array.from(e.dataTransfer.files));
+      const droppedFiles = Array.from(e.dataTransfer.files);
+      
+      // Check if any files would overwrite existing ones
+      try {
+        const existingFiles = await fileService.checkExistingFiles(
+          droppedFiles.map(f => f.name), 
+          props.currentFolderId
+        );
+        
+        if (existingFiles.length > 0) {
+          // Store files for later upload after confirmation
+          setPendingFiles(droppedFiles);
+          setExistingFileNames(existingFiles);
+          setShowDuplicateDialog(true);
+          return;
+        }
+        
+        // No duplicates, proceed with upload
+        setFiles(droppedFiles);
+      } catch (error) {
+        console.error('Error checking for duplicate files:', error);
+        notificationService.error('Failed to check for existing files');
+        
+        // Still set the files for potential manual upload
+        setFiles(droppedFiles);
+      }
     }
   };
   
@@ -80,6 +120,98 @@ export default function UploadForm(props: UploadFormProps) {
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     
     return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+  
+  // Handle file selection from input
+  const handleFileSelect = async (e: Event) => {
+    const input = e.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    
+    const files = Array.from(input.files);
+    
+    // Check if any files would overwrite existing ones
+    try {
+      const existingFiles = await fileService.checkExistingFiles(
+        files.map(f => f.name), 
+        props.currentFolderId
+      );
+      
+      if (existingFiles.length > 0) {
+        // Store files for later upload after confirmation
+        setPendingFiles(files);
+        setExistingFileNames(existingFiles);
+        setShowDuplicateDialog(true);
+        return;
+      }
+      
+      // No duplicates, proceed with upload
+      await processUpload(files);
+    } catch (error) {
+      console.error('Error checking for duplicate files:', error);
+      notificationService.error('Failed to check for existing files');
+      
+      // Reset input
+      input.value = '';
+    }
+  };
+  
+  // Process the upload based on duplicate action
+  const processUpload = async (files: File[]) => {
+    try {
+      await uploadFiles(files, props.currentFolderId);
+      
+      // Reset the input
+      const input = document.getElementById('file-upload') as HTMLInputElement;
+      if (input) input.value = '';
+      
+      // Notify parent component
+      if (props.onUploadComplete) {
+        props.onUploadComplete();
+      }
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      notificationService.error(error instanceof Error ? error.message : 'Failed to upload files');
+    }
+  };
+  
+  // Handle duplicate dialog confirmation
+  const handleDuplicateConfirm = async () => {
+    setShowDuplicateDialog(false);
+    const files = pendingFiles();
+    
+    if (!files.length) return;
+    
+    try {
+      switch (duplicateAction()) {
+        case 'overwrite':
+          // Upload with overwrite flag
+          await uploadFiles(files, props.currentFolderId, true);
+          break;
+          
+        case 'keep-both':
+          // Upload without overwrite flag
+          await uploadFiles(files, props.currentFolderId, false);
+          break;
+          
+        case 'cancel':
+          // Clear pending files and do nothing
+          setPendingFiles([]);
+          break;
+      }
+    } catch (error) {
+      console.error('Error handling duplicate files:', error);
+      notificationService.error(error instanceof Error ? error.message : 'Failed to handle duplicate files');
+    }
+  };
+  
+  // Handle duplicate dialog cancellation
+  const handleDuplicateCancel = () => {
+    setShowDuplicateDialog(false);
+    setPendingFiles([]);
+    setDuplicateAction('cancel');
+    if (hookCancelOverwrite) {
+      hookCancelOverwrite();
+    }
   };
   
   return (
@@ -126,7 +258,7 @@ export default function UploadForm(props: UploadFormProps) {
             id="file-upload" 
             class="hidden" 
             multiple 
-            onChange={handleFileChange}
+            onChange={handleFileSelect}
           />
           <label 
             for="file-upload" 
@@ -182,6 +314,18 @@ export default function UploadForm(props: UploadFormProps) {
           </Button>
         </div>
       </div>
+      
+      {/* Duplicate Files Dialog */}
+      <DuplicateDialog
+        isOpen={showDuplicateDialog()}
+        itemType="file"
+        itemNames={existingFileNames()}
+        onAction={(action) => {
+          setDuplicateAction(action);
+          handleDuplicateConfirm();
+        }}
+        onClose={handleDuplicateCancel}
+      />
     </div>
   );
 } 

@@ -1,8 +1,7 @@
 import { createSignal, createEffect, Show, onMount } from 'solid-js';
 import { useParams, useNavigate } from '@solidjs/router';
-import { fileGateway } from '../gateway/fileGateway';
 import { fileService } from '../services/fileService';
-import { FileItem } from '../types/file';
+import { FileItem } from '../types/fileType';
 import FileList from './FileList';
 import FileContextMenu from './FileContextMenu';
 import FilePreview from './FilePreview';
@@ -13,6 +12,7 @@ import Spinner from '../widgets/Spinner';
 import { notificationService } from '../common/Notification';
 import DragDropContainer from './DragDropContainer';
 import { useFileDownload } from '../hooks/useFileDownload';
+import { TbRefresh } from 'solid-icons/tb';
 
 export default function DriveManager() {
   const params = useParams();
@@ -37,7 +37,6 @@ export default function DriveManager() {
   createEffect(() => {
     const folderId = params.folderId;
     loadFiles(folderId);
-    updateBreadcrumb(folderId);
   });
 
   // Get current folder ID from URL params
@@ -47,32 +46,36 @@ export default function DriveManager() {
   const loadFiles = async (folderId?: string) => {
     setIsLoading(true);
     try {
-      const items = await fileService.getFiles(folderId || null, false);
+      let path = '/';
+      let currentFolderDetails = null;
       
-      // Separate files and folders
-      const folderItems = items.filter(item => item.isFolder);
-      const fileItems = items.filter(item => !item.isFolder);
-      
-      setFolders(folderItems);
-      setFiles(fileItems);
-      
-      // Reset selection
-      setSelectedItems([]);
-      
-      // If we have a folderId, load that folder's details
+      // If we have a folderId, get the folder details first
       if (folderId) {
         try {
-          const folder = await fileService.getFileDetails(folderId);
-          if (folder) {
-            setCurrentFolder(folder);
+          currentFolderDetails = await fileService.getFileDetails(folderId);
+          if (currentFolderDetails) {
+            path = currentFolderDetails.objectPath || '/';
+            setCurrentFolder(currentFolderDetails);
           }
         } catch (error) {
           console.error('Error loading folder details:', error);
         }
       } else {
-        // Root folder
         setCurrentFolder(null);
       }
+      
+      // Load files from the correct path
+      const items = await fileService.getFilesByPath(path);
+      
+      // Separate files and folders
+      setFolders(items.filter(item => item.isFolder));
+      setFiles(items.filter(item => !item.isFolder));
+      
+      // Reset selection
+      setSelectedItems([]);
+      
+      // Update breadcrumb
+      updateBreadcrumb(currentFolderDetails);
     } catch (error) {
       console.error('Error loading files:', error);
       notificationService.error('Failed to load files');
@@ -82,9 +85,9 @@ export default function DriveManager() {
   };
   
   // Update breadcrumb navigation
-  const updateBreadcrumb = async (folderId?: string) => {
+  const updateBreadcrumb = async (folder: FileItem | null) => {
     try {
-      if (!folderId) {
+      if (!folder) {
         // Root directory
         setBreadcrumbs([
           { id: '', label: 'My Drive', onClick: () => navigate('/drive') }
@@ -92,24 +95,27 @@ export default function DriveManager() {
         return;
       }
       
-      // If we have a folder ID, fetch its details
-      const folder = await fileService.getFileDetails(folderId);
-      if (!folder) {
-        // If folder not found, set default breadcrumb
-        setBreadcrumbs([
+      // Build breadcrumb path
+      const breadcrumbItems: BreadcrumbItem[] = [
           { id: '', label: 'My Drive', onClick: () => navigate('/drive') }
-        ]);
-        return;
+      ];
+      
+      // Split path and create breadcrumb items
+      const pathParts = folder.objectPath.split('/').filter(part => part);
+      let currentPath = '';
+      
+      for (const part of pathParts) {
+        currentPath += `/${part}`;
+        breadcrumbItems.push({
+          id: currentPath,
+          label: part,
+          onClick: () => navigate(`/drive${currentPath}`)
+        });
       }
       
-      // Set breadcrumb with the current folder
-      setBreadcrumbs([
-        { id: '', label: 'My Drive', onClick: () => navigate('/drive') },
-        { id: folder.id, label: folder.name, onClick: () => {} }
-      ]);
+      setBreadcrumbs(breadcrumbItems);
     } catch (error) {
       console.error('Error updating breadcrumb:', error);
-      // Set default breadcrumb on error
       setBreadcrumbs([
         { id: '', label: 'My Drive', onClick: () => navigate('/drive') }
       ]);
@@ -129,6 +135,7 @@ export default function DriveManager() {
   // Show context menu for a file or folder
   const handleContextMenu = (item: FileItem, e: MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setContextMenuFile(item);
     setContextMenuPosition({ x: e.clientX, y: e.clientY });
   };
@@ -232,8 +239,9 @@ export default function DriveManager() {
 
   // Handle file deletion (move to trash)
   const handleFileDelete = (file: FileItem) => {
-    fileService.moveToTrash(file.id, file.name)
+    fileService.moveToTrash(file.id)
       .then(() => {
+        notificationService.success(`"${file.name}" moved to trash`);
         loadFiles(currentFolderId());
       })
       .catch((error) => {
@@ -291,6 +299,24 @@ export default function DriveManager() {
     handleCloseContextMenu();
   };
 
+  // Sync storage with MinIO
+  const handleSyncStorage = async () => {
+    setIsLoading(true);
+    try {
+      // Construct path string from current folder
+      const folder = currentFolder();
+      const pathString = folder ? folder.path : '/';
+      
+      await fileService.syncStorage(pathString, 'Drive');
+      // Refresh the file list after sync
+      await loadFiles(currentFolderId());
+    } catch (error) {
+      console.error('Error synchronizing storage:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <DragDropContainer currentFolderId={currentFolderId()} onFilesUploaded={handleFilesUploaded}>
       <div class="p-4">
@@ -334,6 +360,15 @@ export default function DriveManager() {
                 }}
               />
             </label>
+            
+            <button
+              title="Sync Storage"
+              onClick={handleSyncStorage}
+              disabled={isLoading()}
+              class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-background-hover text-text-muted hover:text-text"
+            >
+              <TbRefresh class={isLoading() ? 'animate-spin' : ''} />
+            </button>
           </div>
         </div>
         
@@ -376,7 +411,7 @@ export default function DriveManager() {
           <FilePreview
             file={previewFile()!}
             onClose={handleClosePreview}
-            isOpen={!!previewFile()}
+            getPreviewData={(fileId) => fileService.getFilePreview(fileId)}
           />
         </Show>
         
@@ -385,7 +420,6 @@ export default function DriveManager() {
           <FileProperties
             file={propertiesFile()!}
             onClose={() => setPropertiesFile(null)}
-            isOpen={!!propertiesFile()}
           />
         </Show>
         
