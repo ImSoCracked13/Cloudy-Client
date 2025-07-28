@@ -1,5 +1,4 @@
 import { JSX } from 'solid-js';
-import { useTheme } from '../context/ThemeContext';
 
 interface CardProps {
   title?: string;
@@ -9,14 +8,15 @@ interface CardProps {
   onClick?: () => void;
   hoverable?: boolean;
   variant?: 'default' | 'elevated' | 'outlined';
+  loading?: boolean;
+  loadingText?: string;
 }
 
 export default function Card(props: CardProps) {
-  const { theme } = useTheme();
   const variant = props.variant || 'default';
   
   const getVariantClasses = () => {
-    const isNeon = theme() === 'neon';
+    const isNeon = true;
     
     switch (variant) {
       case 'elevated':
@@ -40,7 +40,7 @@ export default function Card(props: CardProps) {
         rounded-lg overflow-hidden
         ${getVariantClasses()}
         ${props.hoverable ? 'hover:translate-y-[-3px] hover:shadow-xl transition-all duration-300 cursor-pointer' : ''}
-        ${theme() === 'neon' ? 'card' : ''}
+        ${true ? 'card' : ''}
         ${props.class || ''}
       `}
       onClick={props.onClick}
@@ -55,17 +55,17 @@ export default function Card(props: CardProps) {
       } : undefined}
     >
       {props.title && (
-        <div class={`border-b ${theme() === 'neon' ? 'border-primary/20' : 'border-background-light/20'} p-4`}>
+        <div class={`border-b ${true ? 'border-primary/20' : 'border-background-light/20'} p-4`}>
           <h3 class="text-lg font-semibold text-text">{props.title}</h3>
         </div>
       )}
       
       <div class="p-4">
-        {props.children}
+          {props.children}
       </div>
       
       {props.footer && (
-        <div class={`border-t ${theme() === 'neon' ? 'border-primary/20 bg-background-light/5' : 'border-background-light/20 bg-background-light/10'} p-4`}>
+        <div class={`border-t ${true ? 'border-primary/20 bg-background-light/5' : 'border-background-light/20 bg-background-light/10'} p-4`}>
           {props.footer}
         </div>
       )}

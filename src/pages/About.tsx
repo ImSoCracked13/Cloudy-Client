@@ -13,7 +13,7 @@ export default function About() {
             About <span class="text-primary">Cloudy</span>
           </h1>
           <p class="text-xl text-text-muted text-center max-w-3xl mx-auto mb-10">
-            Secure, reliable, and user-friendly cloud storage for individuals and businesses.
+            Swift, secure, reliable, and user-friendly cloud storage for individuals.
           </p>
         </div>
       </section>
@@ -25,10 +25,10 @@ export default function About() {
             <div class="md:w-1/2">
               <h2 class="text-3xl font-bold text-text mb-6">Our Mission</h2>
               <p class="text-text-muted mb-4">
-                Cloudy is designed to provide a secure, reliable, and user-friendly platform for storing and managing your files. Our mission is to simplify file management while ensuring the highest levels of security and performance.
+                Cloudy is designed to provide a swift, secure, reliable, and user-friendly platform for storing and managing your files. Our mission is to simplify file management while ensuring the highest levels of security and performance.
               </p>
               <p class="text-text-muted">
-                Whether you're storing important documents, sharing files with teammates, or organizing your personal media, Cloudy offers the tools you need with the reliability you expect.
+                Whether you're storing important documents, or organizing your personal media, Cloudy offers basic yet powerful features to help you manage your files with ease. Ease of use is at the forefront of our design philosophy.
               </p>
             </div>
             <div class="md:w-1/2 flex justify-center">
@@ -46,44 +46,50 @@ export default function About() {
       <section class="py-16 px-4">
         <div class="max-w-6xl mx-auto">
           <h2 class="text-3xl font-bold text-text text-center mb-12">Our Core Values</h2>
-          
+
           <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Speed */}
             <div class="bg-background-darker p-6 rounded-lg">
               <div class="bg-primary/10 p-3 rounded-full w-fit mb-4">
-                <svg class="h-8 w-8 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                {/* Lightning bolt icon for Speed */}
+                <svg class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h3 class="text-xl font-semibold text-text mb-2">Security</h3>
+              <h3 class="text-xl font-semibold text-text mb-2">Speed</h3>
               <p class="text-text-muted">
-                We prioritize the security of your data above all else, employing end-to-end encryption and robust security measures to protect your files.
+                We prioritize the speed of our service above all else, employing cutting-edge technology to ensure fast upload and download speeds.
               </p>
             </div>
-            
+            {/* Transparency */}
             <div class="bg-background-darker p-6 rounded-lg">
               <div class="bg-primary/10 p-3 rounded-full w-fit mb-4">
-                <svg class="h-8 w-8 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                {/* Eye icon for Transparency */}
+                <svg class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1.5 12s4-7 10.5-7 10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z" />
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none" />
                 </svg>
               </div>
               <h3 class="text-xl font-semibold text-text mb-2">Transparency</h3>
               <p class="text-text-muted">
-                We believe in being open and honest with our users about how their data is stored, processed, and protected.
+                We believe in being open and honest with our users about how their data is stored, processed, and protected, respectfully.
               </p>
             </div>
-            
+            {/* User-Centric */}
             <div class="bg-background-darker p-6 rounded-lg">
               <div class="bg-primary/10 p-3 rounded-full w-fit mb-4">
-                <svg class="h-8 w-8 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                {/* User icon for User-Centric */}
+                <svg class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                 </svg>
               </div>
               <h3 class="text-xl font-semibold text-text mb-2">User-Centric</h3>
               <p class="text-text-muted">
-                We design our products with our users in mind, focusing on intuitive interfaces and features that make your life easier.
+                We design our products with our users in mind, focusing on intuitive interfaces and features that make life easier in the eye of the user.
               </p>
             </div>
           </div>
+
         </div>
       </section>
 
@@ -100,7 +106,7 @@ export default function About() {
               <h3 class="text-xl font-semibold text-text">Pham</h3>
               <p class="text-primary mb-2">Database & Storage Engineer</p>
               <p class="text-text-muted">
-                Expert in database architecture and storage solutions, ensuring your data is safely stored and efficiently managed.
+                Advanced in database architecture and storage solutions, ensuring your data is safely stored and efficiently managed.
               </p>
             </div>
             
@@ -109,9 +115,9 @@ export default function About() {
                 <span class="text-4xl font-bold text-primary">H</span>
               </div>
               <h3 class="text-xl font-semibold text-text">Hong</h3>
-              <p class="text-primary mb-2">Frontend Engineer</p>
+              <p class="text-primary mb-2">Front-end & Styling Engineer</p>
               <p class="text-text-muted">
-                Creates intuitive and responsive user interfaces that make interacting with Cloudy a seamless experience.
+                Creates intuitive and responsive user interfaces that make interacting with Cloudy a seamless experience, satisfiedly.
               </p>
             </div>
             
@@ -120,7 +126,7 @@ export default function About() {
                 <span class="text-4xl font-bold text-primary">P</span>
               </div>
               <h3 class="text-xl font-semibold text-text">Phuc</h3>
-              <p class="text-primary mb-2">Backend Engineer</p>
+              <p class="text-primary mb-2">Back-end & Deployment Engineer</p>
               <p class="text-text-muted">
                 Develops robust server-side solutions that power Cloudy's features and ensure optimal performance.
               </p>
@@ -220,10 +226,10 @@ export default function About() {
             </div>
             {/* 11 */}
             <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
-              <img src="/Cloudlflare Pages.png" alt="Cloudflare Pages" class="h-16 mb-4" />
-              <h3 class="text-lg font-semibold text-text">Frontend Hosting: Cloudflare Pages</h3>
+              <img src="/Vercel.png" alt="Vercel" class="h-16 mb-4" />
+              <h3 class="text-lg font-semibold text-text">Frontend Hosting: Vercel</h3>
               <p class="text-text-muted text-sm">
-                Edge-deployed static site hosting for ultra-fast delivery
+                Provides developer tools, frameworks, and cloud infrastructure to build and maintain websites
               </p>
             </div>
             {/* 12 */}
@@ -266,10 +272,44 @@ export default function About() {
                 Open-source mailing resources for token verifications and auto responses
               </p>
             </div>
+            {/* 17 */}
+            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
+              <img src="/Ubuntu.png" alt="Ubuntu" class="h-16 mb-4" />
+              <h3 class="text-lg font-semibold text-text">OS: Ubuntu</h3>
+              <p class="text-text-muted text-sm">
+                Linux-based operating system for server deployment
+              </p>
+            </div>
+            
+            {/* 18 */}
+            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
+              <img src="/Google.png" alt="Google" class="h-16 mb-4" />
+              <h3 class="text-lg font-semibold text-text">Authentication: Google</h3>
+              <p class="text-text-muted text-sm">
+                Authentication service for enhanced development
+              </p>
+            </div>
+            
+            {/* 19 */}
+            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
+              <img src="/Caddy.png" alt="Caddy" class="h-16 mb-4" />
+              <h3 class="text-lg font-semibold text-text">Reverse Proxy: Caddy</h3>
+              <p class="text-text-muted text-sm">
+                Modern web server with automatic HTTPS
+              </p>
+            </div>
+            
+            {/* 20 */}
+            <div class="bg-background-darker p-6 rounded-lg text-center flex flex-col items-center">
+              <img src="/DuckDNS.png" alt="DuckDNS" class="h-16 mb-4" />
+              <h3 class="text-lg font-semibold text-text">DNS: DuckDNS</h3>
+              <p class="text-text-muted text-sm">
+                Free dynamic DNS service for domain management
+              </p>
+            </div>
           </div>
         </div>
       </section>
-
       {/* CTA Section */}
       <section class="py-16 px-4">
         <div class="max-w-6xl mx-auto text-center">
@@ -291,4 +331,4 @@ export default function About() {
       </section>
     </div>
   );
-} 
+}

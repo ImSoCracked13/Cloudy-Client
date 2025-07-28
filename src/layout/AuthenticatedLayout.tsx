@@ -1,30 +1,24 @@
 import { createSignal, Show, JSX } from 'solid-js';
-import { useLocation, useNavigate, A } from '@solidjs/router';
-import { useAuth } from '../components/context/AuthContext';
-import { useTheme } from '../components/context/ThemeContext';
+import { useLocation, A } from '@solidjs/router';
+import { useTheme } from '../components/hooks/auth/useTheme';
+import { useCurrentUser } from '../components/hooks/auth/useCurrentUser';
 
 export default function AuthenticatedLayout(props: { children?: JSX.Element }) {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { state, logout } = useAuth();
-  const themeContext = useTheme();
-  const isNeonTheme = () => themeContext?.theme() === 'neon';
-  
+
+  const { user } = useCurrentUser();
+  const { theme } = useTheme();
+
   const [isSidebarOpen, setIsSidebarOpen] = createSignal(false);
   
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen());
   };
-  
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
 
   return (
-    <div class={`min-h-screen flex flex-col ${isNeonTheme() ? 'neon-theme' : ''}`}>
+    <div class={`min-h-screen flex flex-col ${theme() === 'neon' ? 'neon-theme' : 'theme-dark'}`}>
       {/* Header */}
-      <header class={`py-3 px-4 flex justify-between items-center shadow-md z-10 ${isNeonTheme() ? 'bg-background-darkest border-b border-primary/20' : 'bg-background-darkest'}`}>
+      <header class={`py-3 px-4 flex justify-between items-center shadow-md z-10 ${theme() === 'neon' ? 'bg-background-darkest border-b border-primary/20' : 'bg-background-darkest'}`}>
         <div class="flex items-center">
           <button 
             onClick={toggleSidebar} 
@@ -49,7 +43,7 @@ export default function AuthenticatedLayout(props: { children?: JSX.Element }) {
               href="/drive" 
               class={`text-sm ${location.pathname.startsWith('/drive') ? 'text-primary' : 'text-text-muted hover:text-text'}`}
             >
-              My Drive
+              Drive
             </A>
             <A 
               href="/bin" 
@@ -67,7 +61,7 @@ export default function AuthenticatedLayout(props: { children?: JSX.Element }) {
           
           <div class="relative">
             <A href="/settings" class="flex items-center gap-2 text-text-muted hover:text-text">
-              <span class="hidden md:inline text-sm">{state.user?.username || 'User'}</span>
+              <span class="hidden md:inline text-sm">{user()?.email || 'User'}</span>
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -85,12 +79,12 @@ export default function AuthenticatedLayout(props: { children?: JSX.Element }) {
             w-64 shadow-lg flex-shrink-0 
             md:block fixed md:static h-full z-20 transition-transform duration-300
             ${isSidebarOpen() ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-            ${isNeonTheme() ? 'bg-background-darker border-r border-primary/20' : 'bg-background-darker'}
+            ${theme() === 'neon' ? 'bg-background-darker border-r border-primary/20' : 'bg-background-darker'}
           `}
         >
           <div class="p-4 space-y-6">
             <div class="space-y-2">
-              <h3 class="text-xs uppercase text-text-muted tracking-wider">STORAGE</h3>
+              <h3 class="text-xs uppercase text-text-muted tracking-wider">VAULT</h3>
               <nav class="space-y-1">
                 <A 
                   href="/drive" 
@@ -99,7 +93,7 @@ export default function AuthenticatedLayout(props: { children?: JSX.Element }) {
                   <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                   </svg>
-                  My Drive
+                  Drive
                 </A>
                 <A 
                   href="/bin" 
@@ -140,7 +134,7 @@ export default function AuthenticatedLayout(props: { children?: JSX.Element }) {
           </div>
         </aside>
         
-        {/* Overlay for mobile sidebar */}
+        {/* Overlay for sidebar in vertical screen */}
         <Show when={isSidebarOpen()}>
           <div 
             class="fixed inset-0 bg-black bg-opacity-50 z-10 md:hidden"
@@ -150,7 +144,9 @@ export default function AuthenticatedLayout(props: { children?: JSX.Element }) {
         
         {/* Main Content */}
         <main class="flex-1 overflow-auto">
-          {props.children}
+
+            {props.children}
+
         </main>
       </div>
     </div>

@@ -43,7 +43,7 @@ export default function Home() {
               </div>
               <h3 class="text-xl font-bold mb-2">Secure Storage</h3>
               <p class="text-text-muted">
-                Your files are encrypted and protected with the latest security measures.
+                Files are encrypted and protected with the latest security measures.
               </p>
             </div>
 
@@ -56,6 +56,53 @@ export default function Home() {
               <h3 class="text-xl font-bold mb-2">Access Anywhere</h3>
               <p class="text-text-muted">
                 Access your files from any device, anywhere in the world.
+              </p>
+            </div>
+
+            <div class="bg-background p-6 rounded-lg shadow-lg">
+              <div class="text-primary mb-4">
+                <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M5.5 16a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 16h-8z" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-bold mb-2">Blazing Fast</h3>
+              <p class="text-text-muted">
+                Experience lightning-fast upload and download speeds.
+              </p>
+            </div>
+
+            <div class="bg-background p-6 rounded-lg shadow-lg">
+              <div class="text-primary mb-4">
+                <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M5.5 16a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 16h-8z" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-bold mb-2">User-Friendly</h3>
+              <p class="text-text-muted">
+                Intuitive interface designed for ease of use.
+              </p>
+            </div>
+            <div class="bg-background p-6 rounded-lg shadow-lg">
+              <div class="text-primary mb-4">
+                <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M5.5 16a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 16h-8z" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-bold mb-2">Responsive Website</h3>
+              <p class="text-text-muted">
+                Single Page Application rendering for a seamless experience.
+              </p>
+            </div>
+
+            <div class="bg-background p-6 rounded-lg shadow-lg">
+              <div class="text-primary mb-4">
+                <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M5.5 16a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 16h-8z" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-bold mb-2">Pocket-sized Vault</h3>
+              <p class="text-text-muted">
+                Store files in the cloud without taking up space on device.
               </p>
             </div>
           </div>
@@ -78,7 +125,7 @@ export default function Home() {
         <div class="max-w-6xl mx-auto">
           <h2 class="text-3xl font-bold text-center mb-8">Take a look of Cloudy technologies!</h2>
           <p class="text-xl mb-8 text-center">
-            With 16 technologies, Cloudy is built to be the a very reliable yet responsive storage solution.
+            With 20 technologies, Cloudy is built to be the a very reliable yet responsive storage solution.
           </p>
           <p class="text-xl mb-8 text-center">
           <A href="/about" class="bg-primary hover:bg-primary-hover text-white px-6 py-3 rounded-md font-medium">

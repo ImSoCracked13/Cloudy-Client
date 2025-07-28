@@ -1,4 +1,4 @@
-import { Component, createSignal, ErrorBoundary as SolidErrorBoundary, JSX } from 'solid-js';
+import { createSignal, ErrorBoundary as SolidErrorBoundary, JSX } from 'solid-js';
 import Button from '../widgets/Button';
 
 interface ErrorBoundaryProps {
@@ -9,8 +9,8 @@ export default function ErrorBoundary(props: ErrorBoundaryProps) {
   const [error, setError] = createSignal<Error | null>(null);
 
   const handleError = (err: Error) => {
-    console.error('Application error:', err);
     setError(err);
+    console.error('ErrorBoundary caught an error:', err);
   };
 
   const resetError = () => {

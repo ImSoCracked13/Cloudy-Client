@@ -5,8 +5,9 @@ import App from './App';
 // Import UnoCSS styles
 import 'uno.css';
 import '@unocss/reset/tailwind.css';
-// Import our custom styles
-import './components/styles/Theme.css';
+
+// Import custom styles
+import './styles/Theme.css';
 
 // Initialize the application
 const initApp = () => {

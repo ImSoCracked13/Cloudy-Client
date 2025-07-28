@@ -1,15 +1,14 @@
 import { JSX } from 'solid-js';
 import { A } from '@solidjs/router';
-import { useTheme } from '../components/context/ThemeContext';
+import { useTheme } from '../components/hooks/auth/useTheme';
 
 export default function PublicLayout(props: { children?: JSX.Element }) {
-  const themeContext = useTheme();
-  const isNeonTheme = () => themeContext?.theme() === 'neon';
+  const { theme } = useTheme();
   
   return (
-    <div class={`min-h-screen flex flex-col ${isNeonTheme() ? 'neon-theme' : ''}`}>
+    <div class={`min-h-screen flex flex-col ${theme() === 'neon' ? 'neon-theme' : 'theme-dark'}`}>
       {/* Header */}
-      <header class={`py-3 px-4 flex justify-between items-center shadow-md z-10 ${isNeonTheme() ? 'bg-background-darkest border-b border-primary/20' : 'bg-background-darkest'}`}>
+      <header class={`py-3 px-4 flex justify-between items-center shadow-md z-10 ${theme() === 'neon' ? 'bg-background-darkest border-b border-primary/20' : 'bg-background-darkest'}`}>
         <div class="flex items-center">
           <A href="/" class="flex items-center gap-2">
             <svg class="h-8 w-8 text-primary" fill="currentColor" viewBox="0 0 20 20">
@@ -20,16 +19,23 @@ export default function PublicLayout(props: { children?: JSX.Element }) {
         </div>
         
         <div class="flex items-center gap-4">
-          <A 
-            href="/login" 
-            class="text-sm text-text-muted hover:text-text"
+          <A
+            href="/login"
+            class={`text-sm px-3 py-1 rounded ${
+              theme() === 'neon'
+                ? 'bg-[#e5e7eb] text-black hover:bg-[#d1d5db]'
+                : 'bg-[#2b2d31] text-[#b5bac1] hover:bg-[#313338] hover:text-white'
+            }`}
           >
             Login
           </A>
-          
-          <A 
-            href="/register" 
-            class={`text-sm px-3 py-1 rounded ${isNeonTheme() ? 'bg-primary text-black hover:bg-primary-hover' : 'bg-primary hover:bg-primary-hover text-white'}`}
+          <A
+            href="/register"
+            class={`text-sm px-3 py-1 rounded ${
+              theme() === 'neon' 
+              ? 'bg-primary text-black hover:bg-primary-hover' 
+              : 'bg-primary hover:bg-primary-hover text-white'
+            }`}
           >
             Register
           </A>
@@ -44,7 +50,7 @@ export default function PublicLayout(props: { children?: JSX.Element }) {
       </div>
       
       {/* Footer */}
-      <footer class={`py-4 px-6 ${isNeonTheme() ? 'bg-background-darkest border-t border-primary/20' : 'bg-background-darkest'}`}>
+      <footer class={`py-4 px-6 ${theme() === 'neon' ? 'bg-background-darkest border-t border-primary/20' : 'bg-background-darkest'}`}>
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
           <p class="text-text-muted text-sm">&copy; {new Date().getFullYear()} Cloudy. All rights reserved.</p>
           <div class="flex gap-6 mt-4 md:mt-0">

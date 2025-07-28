@@ -42,7 +42,11 @@ export default function Dialog(props: DialogProps) {
 
   // Handle click outside
   const handleClickOutside = (e: MouseEvent) => {
-    if (!props.preventClose && dialogRef && !dialogRef.contains(e.target as Node)) {
+    const target = e.target as HTMLElement;
+    if (props.preventClose) return;
+    
+    // Only close if clicking the overlay directly
+    if (target.classList.contains('dialog-overlay')) {
       props.onClose();
     }
   };
@@ -51,15 +55,16 @@ export default function Dialog(props: DialogProps) {
     if (props.onOpen) {
       props.onOpen();
     }
+    
+    // Prevent body scrolling when dialog is open
+    document.body.style.overflow = 'hidden';
   });
 
   createEffect(() => {
     if (props.isOpen) {
-      // Add event listeners with a small delay to prevent immediate triggering
-      setTimeout(() => {
+      // Add event listeners
         document.addEventListener('keydown', handleKeyDown);
         document.addEventListener('mousedown', handleClickOutside);
-      }, 100);
 
       // Focus the dialog
       if (dialogRef) {
@@ -71,31 +76,40 @@ export default function Dialog(props: DialogProps) {
     onCleanup(() => {
     document.removeEventListener('keydown', handleKeyDown);
     document.removeEventListener('mousedown', handleClickOutside);
+    
+    // Restore body scrolling
+    document.body.style.overflow = '';
   });
 
   return (
     <Show when={props.isOpen}>
+      <div class="fixed inset-0 z-[100] overflow-y-auto">
+        {/* Overlay */}
       <div 
-        class="dialog-overlay"
+          class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity dialog-overlay"
+        />
+        
+        <div class="flex min-h-screen items-center justify-center p-4 relative z-[101]">
+          {/* Dialog */}
+          <div 
+            ref={dialogRef}
+            class="relative bg-[#1E1E1E] rounded-lg shadow-2xl w-full border border-gray-700"
+            classList={{
+              [getDialogSizeClass()]: true
+            }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="dialog-title"
-        id={props.id}
-      >
-        <div 
-          ref={dialogRef} 
-          class={`dialog-content ${getDialogSizeClass()}`}
-          role="document"
-          tabIndex={-1}
-        >
-          <div class="flex justify-between items-center mb-4 pb-3 border-b border-background-light/20">
+            style="transform: translateZ(0); will-change: transform;"
+          >
+            {/* Header */}
+            <div class="flex items-center justify-between p-4 border-b border-gray-700">
             <h3 
               id="dialog-title"
-              class="text-lg font-semibold text-text"
+                class="text-lg font-medium text-white"
             >
               {props.title}
             </h3>
-            
             {!props.preventClose && (
               <button
                 onClick={(e) => {
@@ -103,30 +117,28 @@ export default function Dialog(props: DialogProps) {
                   e.stopPropagation();
                   props.onClose();
                 }}
-                class="text-text-muted hover:text-text focus:outline-none rounded-full hover:bg-background-light/30 p-1.5 transition-colors"
+                  class="text-gray-400 hover:text-white transition-colors rounded-full p-1 hover:bg-gray-700/50"
                 aria-label="Close dialog"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             )}
           </div>
           
-          <div 
-            class="mt-3 overflow-y-auto max-h-[70vh] custom-scrollbar pr-1"
-            aria-describedby="dialog-description"
-          >
-            <div id="dialog-description">
+            {/* Content */}
+            <div class="p-4 text-gray-200">
               {props.children}
-            </div>
           </div>
           
+            {/* Actions */}
           {props.actions && (
-            <div class="mt-6 flex justify-end gap-3 pt-3 border-t border-background-light/20">
+              <div class="p-4 border-t border-gray-700 flex justify-end space-x-3">
               {props.actions}
             </div>
           )}
+          </div>
         </div>
       </div>
     </Show>
