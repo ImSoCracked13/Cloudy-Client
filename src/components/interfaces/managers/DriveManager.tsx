@@ -1,5 +1,5 @@
 import { createSignal, createEffect } from 'solid-js';
-import { useNavigate, useParams } from '@solidjs/router';
+import { useNavigate } from '@solidjs/router';
 import { useFileHandler, type FileItem } from '../../handlers/FileHandler';
 import FileList from '../../blocks/files/joints/FileList';
 import SearchInput from '../../blocks/files/joints/SearchInput';
@@ -10,20 +10,11 @@ import DragDropContainer from '../../blocks/files/drive/DragDropContainer';
 
 export default function DriveManager() {
   const fileHandler = useFileHandler();
-  const params = useParams();
   const navigate = useNavigate();
   
-  const [currentFolderId, setCurrentFolderId] = createSignal<string | null>(null);
   const [searchQuery, setSearchQuery] = createSignal('');
   const [files, setFiles] = createSignal<FileItem[]>([]);
   const [selectedFilterTypes, setSelectedFilterTypes] = createSignal<string[]>([]);
-  
-  // Load files based on route params
-  createEffect(() => {
-    const folderId = params.folderId || null;
-    setCurrentFolderId(folderId);
-    // File fetching is now handled by FileList component
-  });
 
   // Subscribe to file handler updates
   createEffect(() => {
@@ -100,7 +91,6 @@ export default function DriveManager() {
   return (
     <DragDropContainer 
       onFilesSelected={handleFilesDropped}
-      parentId={currentFolderId()}
       class="min-h-[500px]"
     >
       <div class="space-y-4">
@@ -119,7 +109,6 @@ export default function DriveManager() {
               onFilterChange={handleFilterChange}
             />
             <UploadButton 
-              currentFolderId={currentFolderId()} 
               onUploadComplete={() => fileHandler.refreshFiles(false)}
               onClose={() => {}}
             />
@@ -131,7 +120,8 @@ export default function DriveManager() {
         
         {/* Files */}
         <FileList
-          currentPath={currentFolderId() ? `/folders/${currentFolderId()}` : '/'}
+          currentPath="/"
+          isBin={false}
           onFileClick={handleFileClick}
           onFileDelete={handleDelete}
           onFileRename={handleRename}
@@ -142,7 +132,6 @@ export default function DriveManager() {
           }}
           searchTerm={searchQuery()}
           filterTypes={selectedFilterTypes()}
-          isBin={false}
         />
       </div>
     </DragDropContainer>

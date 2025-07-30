@@ -37,6 +37,12 @@ export default function RegisterButton(props: RegisterButtonProps) {
             return;
         }
 
+        // Check for password at least 8 characters long
+        if (props.password.length < 8) {
+            toastService.error('Password must be at least 8 characters long');
+            return;
+        }
+
         try {
 
             const result = await register(props.username, props.email, props.password, props.confirmPassword);

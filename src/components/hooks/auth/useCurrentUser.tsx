@@ -3,16 +3,6 @@ import { useLocation } from '@solidjs/router';
 import { authService } from '../../../services/authService';
 import { authStore } from '../../store/AuthStore';
 
-interface User {
-  id: string;
-  username?: string;
-  email: string;
-  isVerified?: boolean;
-  avatar?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
 // Define public routes where auth checking should be disabled
 const PUBLIC_ROUTES = [
   '/',

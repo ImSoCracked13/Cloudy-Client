@@ -4,6 +4,7 @@ import { useFilesList } from '../../../hooks/files/joints/useFilesList';
 import Dialog from '../../../widgets/Dialog';
 import Button from '../../../widgets/Button';
 import Input from '../../../widgets/Input';
+import toastService from '../../../common/Notification';
 
 export interface RenameDialogProps {
   isOpen: boolean;
@@ -55,7 +56,9 @@ export default function RenameDialog(props: RenameDialogProps) {
     
     // Check if the new name already exists (and it's not the current file)
     if (fileExists(finalName) && finalName !== props.file.name) {
-      setError(`A file named "${finalName}" already exists. Please choose a different name.`);
+      const errorMsg = `A file named "${finalName}" already exists. Please choose a different name.`;
+      setError(errorMsg);
+      toastService.warning(errorMsg);
       return;
     }
     

@@ -11,7 +11,6 @@ export const fileService = {
    */
   async uploadFile(
     fileToUpload: File, 
-    parentId?: string | null, 
     onProgress?: (progress: number) => void,
   ): Promise<FileItem> {
     try {
@@ -28,7 +27,7 @@ export const fileService = {
       // Get response from gateway
       const response = await fileGateway.uploadFile(
         fileToUpload,
-        parentId || null,
+        null,
         enhancedProgress,
       );
       

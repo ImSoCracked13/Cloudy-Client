@@ -1,5 +1,7 @@
 import { defineConfig, loadEnv } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
+import solid from 'vite-plugin-solid'
+import devtools from 'solid-devtools/vite'
 import UnocssPlugin from '@unocss/vite';
 
 export default defineConfig(({ mode }) => {
@@ -20,6 +22,12 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       solidPlugin(),
+      devtools({
+      /* features options - all disabled by default */
+      autoname: true, // e.g. enable autoname
+      }),
+      solid(),
+      // Solid Devtools for better debugging experience
       UnocssPlugin(),
     ],
     base: '/',

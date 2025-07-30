@@ -1,6 +1,9 @@
 import { createStore } from 'solid-js/store';
 import { FileItem, StorageStats } from '../../types/fileType';
 
+/**
+ * File management state and actions
+ */
 export interface UploadItem {
   file: File;
   progress: number;
@@ -70,7 +73,6 @@ export interface FileState {
   
   // Upload management
   uploads: UploadItem[];
-  downloadProgress: number;
   
   // Preview and properties
   preview: FilePreview | null;
@@ -130,7 +132,6 @@ const [fileState, setFileState] = createStore<FileState>({
   
   // Upload management
   uploads: [],
-  downloadProgress: 0,
   
   // Preview and properties
   preview: null,
@@ -225,10 +226,6 @@ export const fileStore = {
   setDownloadError: (error: string | null) => {
     setFileState('downloadError', error);
     setFileState('downloadLoading', false);
-  },
-  
-  setDownloadProgress: (progress: number) => {
-    setFileState('downloadProgress', progress);
   },
   
   // Delete actions

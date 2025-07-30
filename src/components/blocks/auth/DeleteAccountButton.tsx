@@ -17,12 +17,12 @@ export default function DeleteAccountButton(props: DeleteAccountButtonProps) {
 
   const handleDeleteAccount = async () => {
     if (!props.isGoogleUser && !password()) {
-      toastService.error('Please enter your password');
+      toastService.error('Please enter your password correctly');
       return;
     }
 
     if (props.isGoogleUser && confirmPhrase() !== 'DELETE') {
-      toastService.error('Please type "DELETE" to confirm');
+      toastService.error('Please type accurate "DELETE" to confirm');
       return;
     }
 

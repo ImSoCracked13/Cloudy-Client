@@ -1,7 +1,10 @@
-import { createSignal, Show, For } from 'solid-js';
+import { createSignal, Show, For, createEffect } from 'solid-js';
 import { useMoveToBin } from '../../../hooks/files/drive/useMoveToBin';
+import { useFilesList } from '../../../hooks/files/joints/useFilesList';
 import Dialog from '../../../widgets/Dialog';
 import Button from '../../../widgets/Button';
+import toastService from '../../../common/Notification';
+
 
 export interface MoveToBinDialogProps {
   isOpen: boolean;
@@ -12,8 +15,14 @@ export interface MoveToBinDialogProps {
 
 export default function MoveToBinDialog(props: MoveToBinDialogProps) {
   const { moveToBin, loading: moveLoading, error: moveError } = useMoveToBin();
+  const { getBinFiles } = useFilesList();
   const [isProcessing, setIsProcessing] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
+
+  // Check if file exists in bin
+  const fileExistsInBin = (fileName: string) => {
+    return getBinFiles().some(file => file.name === fileName);
+  };
   
   // Format file size helper
   const formatFileSize = (bytes: number): string => {
@@ -29,14 +38,23 @@ export default function MoveToBinDialog(props: MoveToBinDialogProps) {
   const handleMoveToBin = async () => {
     if (props.files.length === 0) return;
     
+    const fileToMove = props.files[0];
+    
+    // Check if file with same name already exists in bin
+    if (fileExistsInBin(fileToMove.name)) {
+      const errorMsg = `A file named "${fileToMove.name}" already exists in Bin. Please rename the file before moving it.`;
+      setError(errorMsg);
+      toastService.warning(errorMsg);
+      return;
+    }
+    
     setIsProcessing(true);
     setError(null);
     
     try {
-      const success = await moveToBin(props.files[0].id);
+      const success = await moveToBin(fileToMove.id);
       
       if (success) {
-        
         if (props.onComplete) {
           props.onComplete();
         }
@@ -48,6 +66,7 @@ export default function MoveToBinDialog(props: MoveToBinDialogProps) {
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to move files to bin';
       setError(errorMsg);
+      toastService.error(errorMsg);
     } finally {
       setIsProcessing(false);
     }

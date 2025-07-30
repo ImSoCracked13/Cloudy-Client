@@ -56,7 +56,6 @@ const fetchUpload = async (params: { file: File, parentId?: string | null, onPro
 
   const formData = new FormData();
   formData.append('file', params.file);
-  if (params.parentId) formData.append('parentId', params.parentId);
 
   const response = await fetch(`${BASE_API_PATH}/files/upload`, {
     method: 'POST',
@@ -253,7 +252,7 @@ const fetchStorageStats = async () => {
   const data = await handleResponse(response);
   // Return with computed percentage for smoother updates
   const stats = data.data;
-  return {...stats,};
+  return {...stats};
 };
 
 // Create root for resources

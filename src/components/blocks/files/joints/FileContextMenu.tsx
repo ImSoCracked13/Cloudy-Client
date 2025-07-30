@@ -355,7 +355,7 @@ const FileContextMenu: Component<FileContextMenuProps> = (props) => {
           files={[props.file]}
           onClose={() => setShowDeleteForeverDialog(false)}
           onComplete={() => {
-            toastService.success('File deleted permanently');
+            toastService.success('File deleted successfully');
             props.onReload?.();
             setShowDeleteForeverDialog(false);
           }}

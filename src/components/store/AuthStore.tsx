@@ -1,5 +1,8 @@
 import { createStore } from 'solid-js/store';
 
+/**
+ * State management for authentication
+ */
 export interface User {
   id: string;
   username?: string;

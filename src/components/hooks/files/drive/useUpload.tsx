@@ -4,11 +4,11 @@ import { fileStore } from '../../../store/FileStore';
 import { FileItem } from '../../../../types/fileType';
 
 /**
- * Hook for file upload functionality with simulated progress
+ * Hook for file upload functionality
  */
 export function useUpload() {
 
-  const addToUploadQueue = (files: File[], parentId?: string | null) => {
+  const addToUploadQueue = (files: File[]) => {
     const newUploads = files.map(file => ({
       file,
       progress: 0,
@@ -19,50 +19,20 @@ export function useUpload() {
     return newUploads;
   };
 
-  const updateUploadProgress = (file: File, progress: number) => {
-    batch(() => {
-      fileStore.updateUpload(file, {
-        progress,
-        status: progress >= 100 ? 'completed' : 
-                progress > 0 ? 'uploading' : 
-                'pending'
-      });
-    });
-  };
-
-  const simulateProgress = (file: File) => {
-    return new Promise<void>((resolve) => {
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += Math.floor(Math.random() * 20) + 10; // Increment by 10-30%
-        if (progress >= 95) {
-          clearInterval(interval);
-          resolve();
-        }
-        updateUploadProgress(file, progress);
-      }, 150); // Update every 150ms (faster than before)
-    });
-  };
-
-  const uploadFile = async (file: File, parentId?: string | null) => {
+  const uploadFile = async (file: File) => {
     try {
       batch(() => {
         fileStore.setUploadLoading(true);
         fileStore.updateUpload(file, { status: 'uploading', progress: 0 });
       });
 
-      // Faster simulation
-      await simulateProgress(file);
-
-      // Actual upload would go here
+      // Actual upload
       const result = await fileService.uploadFile(
-        file,
-        parentId,
-        (progress) => updateUploadProgress(file, progress)
+        file
       );
 
-      // Immediately mark as complete
-      updateUploadProgress(file, 100);
+      // Mark as complete
+      fileStore.updateUpload(file, { status: 'completed', progress: 100 });
       fileStore.setUploadLoading(false);
 
       return result;
@@ -79,14 +49,14 @@ export function useUpload() {
     }
   };
 
-  const startUploads = async (parentId?: string | null) => {
+  const startUploads = async () => {
     const pendingUploads = fileStore.state.uploads.filter(u => u.status === 'pending');
     const results: FileItem[] = [];
     let hasError = false;
 
     for (const upload of pendingUploads) {
       try {
-        const result = await uploadFile(upload.file, parentId);
+        const result = await uploadFile(upload.file);
         if (result) {
           results.push(result);
         }
@@ -114,13 +84,13 @@ export function useUpload() {
     fileStore.clearAllUploads();
   };
 
-  const retryUpload = async (file: File, parentId?: string | null) => {
+  const retryUpload = async (file: File) => {
     fileStore.updateUpload(file, {
       status: 'pending',
       progress: 0,
       error: undefined
     });
-    return await uploadFile(file, parentId);
+    return await uploadFile(file);
   };
 
   return {

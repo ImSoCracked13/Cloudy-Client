@@ -1,7 +1,10 @@
 import { Component, createSignal } from 'solid-js';
 import { useRestore } from '../../../hooks/files/bin/useRestore';
+import { useFilesList } from '../../../hooks/files/joints/useFilesList';
 import Dialog from '../../../widgets/Dialog';
 import Button from '../../../widgets/Button';
+import toastService from '../../../common/Notification';
+
 
 interface RestoreDialogProps {
   isOpen: boolean;
@@ -12,9 +15,15 @@ interface RestoreDialogProps {
 
 const RestoreDialog: Component<RestoreDialogProps> = (props) => {
   const { restore, loading: restoreLoading, error: restoreError } = useRestore();
+  const { getDriveFiles } = useFilesList();
   const [isProcessing, setIsProcessing] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
   
+  // Check if file exists in Drive
+  const fileExistsInDrive = (fileName: string) => {
+    return getDriveFiles().some(file => file.name === fileName);
+  };
+
   // Format file size helper
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
@@ -33,6 +42,16 @@ const RestoreDialog: Component<RestoreDialogProps> = (props) => {
   // Handle restore action
   const handleRestore = async () => {
     if (props.files.length === 0) return;
+    
+    const fileToRestore = props.files[0];
+
+    // Check if file with same name already exists in Drive
+    if (fileExistsInDrive(fileToRestore.name)) {
+      const errorMsg = `A file named "${fileToRestore.name}" already exists in Drive. Please delete it.`;
+      setError(errorMsg);
+      toastService.warning(errorMsg);
+      return;
+    }
     
     setIsProcessing(true);
     setError(null);

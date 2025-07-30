@@ -1,33 +1,17 @@
-import { createSignal, Show } from 'solid-js';
 import { useUpload } from '../../../hooks/files/drive/useUpload';
 import { useFilesList } from '../../../hooks/files/joints/useFilesList';
 import Button from '../../../widgets/Button';
-import UploadBar from './UploadBar';
-import UploadLimitChecker from './UploadLimitChecker';
-import SameNameChecker from './SameNameChecker';
+import toastService from '../../../common/Notification';
 
 interface UploadButtonProps {
-  currentFolderId: string | null;
   onClose: () => void;
   onUploadComplete?: () => void;
   class?: string;
 }
 
 export default function UploadButton(props: UploadButtonProps) {
-  const { loading: uploadLoading, clearAllUploads } = useUpload();
+  const { loading: uploadLoading, clearAllUploads, startUploads, addToUploadQueue } = useUpload();
   const { fileExists } = useFilesList();
-
-  const [files, setFiles] = createSignal<File[]>([]);
-  const [showUploadDialog, setShowUploadDialog] = createSignal(false);
-
-  const [pendingFiles, setPendingFiles] = createSignal<File[]>([]);
-  const [showSizeLimitDialog, setShowSizeLimitDialog] = createSignal(false);
-
-  const [oversizedFiles, setOversizedFiles] = createSignal<File[]>([]);
-  const [storageLimitExceeded, setStorageLimitExceeded] = createSignal(false);
-
-  const [showSameFileDialog, setShowSameFileDialog] = createSignal(false);
-  const [duplicateFiles, setDuplicateFiles] = createSignal<File[]>([]);
 
   const sizeLimit = 25 * 1024 * 1024; // 25MB
   const storageLimit = 5 * 1024 * 1024 * 1024; // 5GB
@@ -38,62 +22,51 @@ export default function UploadButton(props: UploadButtonProps) {
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
-  }
+  };
 
-  // Handle file selection and size validation
-  const handleFileChange = (e: Event) => {
+  // Handle file selection and validation with toast messages
+  const handleFileChange = async (e: Event) => {
     const input = e.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const selectedFiles = Array.from(input.files);
-      const validFiles = [];
-      const oversized = [];
-      const duplicates = [];
+      const validFiles: File[] = [];
       
-      // Check each file's size and name conflicts
+      // Check each file's size, storage limit, and name conflicts
       for (const file of selectedFiles) {
+        // Check file size limit (25MB)
         if (file.size > sizeLimit) {
-          oversized.push(file);
-        } else if (fileExists(file.name)) {
-          duplicates.push(file);
-        } else {
-          validFiles.push(file);
+          toastService.warning(`File "${file.name}" exceeds 25MB limit (${formatFileSize(file.size)}). Please choose a smaller file.`);
+          continue;
         }
-      }
-      
-      setFiles(selectedFiles);
-      
-      // Show duplicate files dialog if any duplicates found
-      if (duplicates.length > 0) {
-        setDuplicateFiles(duplicates);
-        setShowSameFileDialog(true);
-      }
-      
-      // Show size limit warning if any oversized files
-      if (oversized.length > 0) {
-        setOversizedFiles(oversized);
-        setShowSizeLimitDialog(true);
-
-        // Only proceed with valid files if there are any
-        if (validFiles.length > 0) {
-          setPendingFiles(validFiles);
-          setShowUploadDialog(true);
+        
+        // Check for duplicate names
+        if (fileExists(file.name)) {
+          toastService.warning(`A file named "${file.name}" already exists. Please rename the file or choose a different one.`);
+          continue;
         }
-      } else if (validFiles.length > 0) {
-        setPendingFiles(validFiles);
-        setShowUploadDialog(true);
+        
+        validFiles.push(file);
       }
-
-      // Check storage limit
-      const totalSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
-      if (totalSize > storageLimit) {
-        setStorageLimitExceeded(true);
+      
+      // Check total storage limit
+      if (validFiles.length > 0) {
+        const totalSize = validFiles.reduce((sum, file) => sum + file.size, 0);
+        if (totalSize > storageLimit) {
+          toastService.error(`Total file size (${formatFileSize(totalSize)}) exceeds 5GB storage limit. Please remove some files.`);
+          return;
+        }
+        
+        // Proceed with upload
+        try {
+          addToUploadQueue(validFiles);
+          await startUploads();
+          toastService.success(`Uploaded ${validFiles.length} file${validFiles.length > 1 ? 's' : ''} successfully`);
+          props.onUploadComplete?.();
+        } catch (error) {
+          toastService.error('Failed to upload files');
+        }
       }
     }
-  };
-
-  const handleUploadComplete = () => {
-    setShowUploadDialog(false);
-    props.onUploadComplete?.();
   };
   
   const uploadIcon = (
@@ -117,70 +90,24 @@ export default function UploadButton(props: UploadButtonProps) {
   };
   
   return (
-    <>
-      <div class="relative">
-        <input
-          type="file"
-          id="file-upload"
-          multiple
-          class="hidden"
-          onChange={handleFileChange}
-        />
-        <Button
-          variant="primary"
-          leftIcon={uploadIcon}
-          loading={uploadLoading()}
-          disabled={uploadLoading()}
-          onClick={handleButtonClick}
-          class="!bg-blue-600 hover:!bg-blue-700"
-        >
-          Upload Files
-        </Button>
-      </div>
-
-      {/* Show size limit warning for oversized files */}
-      <Show when={showSizeLimitDialog()}>
-        <UploadLimitChecker
-          isOpen={showSizeLimitDialog()}
-          files={oversizedFiles()}
-          currentFolderId={props.currentFolderId}
-          onClose={() => setShowSizeLimitDialog(false)}
-        />
-      </Show>
-
-      {/* Show storage limit exceeded warning */}
-      <Show when={storageLimitExceeded()}>
-        <UploadLimitChecker
-          files={[]}
-          isOpen={storageLimitExceeded()}
-          currentFolderId={props.currentFolderId}
-          onClose={() => setStorageLimitExceeded(false)}
-        />
-      </Show>
-
-      {/* Show same file name warning */}
-      <Show when={showSameFileDialog()}>
-        <SameNameChecker
-          isOpen={showSameFileDialog()}
-          files={duplicateFiles()}
-          currentFolderId={props.currentFolderId}
-          onClose={() => setShowSameFileDialog(false)}
-        />
-      </Show>
-
-      {/* Show upload dialog for valid files */}
-      <Show when={showUploadDialog()}>
-        <UploadBar
-          isOpen={showUploadDialog()}
-          files={pendingFiles()}
-          currentFolderId={props.currentFolderId}
-          onClose={() => {
-            setShowUploadDialog(false);
-            handleUploadComplete();
-          }}
-          onUploadComplete={handleUploadComplete}
-        />
-      </Show>
-    </>
+    <div class="relative">
+      <input
+        type="file"
+        id="file-upload"
+        multiple
+        class="hidden"
+        onChange={handleFileChange}
+      />
+      <Button
+        variant="primary"
+        leftIcon={uploadIcon}
+        loading={uploadLoading()}
+        disabled={uploadLoading()}
+        onClick={handleButtonClick}
+        class="!bg-blue-600 hover:!bg-blue-700"
+      >
+        Upload Files
+      </Button>
+    </div>
   );
 }

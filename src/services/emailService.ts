@@ -35,9 +35,9 @@ function isValidEmail(email: string): boolean {
 
 export const emailService = {
   /**
-   * Send verification email using EmailJS
+   * Create verification email template using EmailJS
    */
-  async sendVerificationEmail(
+  async createVerificationEmail(
     email: string, 
     name: string, 
     verificationLink: string
@@ -119,8 +119,7 @@ export const emailService = {
       const verificationLink = this.generateVerificationLink(token, email);
       
       // Send the verification email
-      await this.sendVerificationEmail(email, name, verificationLink);
-      
+      await this.createVerificationEmail(email, name, verificationLink);
       console.log('Verification email sent successfully with server token');
       return true;
     } catch (error) {

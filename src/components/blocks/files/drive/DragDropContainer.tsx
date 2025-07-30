@@ -1,9 +1,7 @@
 import { JSX, Show, createSignal } from 'solid-js';
 import { useDragDrop } from '../../../hooks/files/drive/useDragDrop';
 import { useFilesList } from '../../../hooks/files/joints/useFilesList';
-import UploadBar from './UploadBar';
-import UploadLimitChecker from './UploadLimitChecker';
-import SameNameChecker from './SameNameChecker';
+import { useUpload } from '../../../hooks/files/drive/useUpload';
 import toastService from '../../../common/Notification';
 
 
@@ -12,28 +10,16 @@ interface DragDropContainerProps {
     onFilesSelected?: (files: File[]) => void;
     disabled?: boolean;
     class?: string;
-    parentId?: string | null;
 }
 
 export default function DragDropContainer(props: DragDropContainerProps) {
     const { fileExists } = useFilesList();
-    const [showUploadBar, setShowUploadBar] = createSignal(false);
-
-    const [droppedFiles, setDroppedFiles] = createSignal<File[]>([]);
-    const [pendingFiles, setPendingFiles] = createSignal<File[]>([]);
-
-    const [showSizeLimitDialog, setShowSizeLimitDialog] = createSignal(false);
-    const [oversizedFiles, setOversizedFiles] = createSignal<File[]>([]);
-
-    const [storageLimitExceeded, setStorageLimitExceeded] = createSignal(false);
-    const [showSameFileDialog, setShowSameFileDialog] = createSignal(false);
-
-    const [duplicateFiles, setDuplicateFiles] = createSignal<File[]>([]);
+    const { addToUploadQueue, startUploads } = useUpload();
 
     const sizeLimit = 25 * 1024 * 1024; // 25MB
     const storageLimit = 5 * 1024 * 1024 * 1024; // 5GB
 
-  // Format file size for display
+    // Format file size for display
     const formatFileSize = (bytes: number): string => {
         if (bytes === 0) return '0 Bytes';
         const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -41,17 +27,10 @@ export default function DragDropContainer(props: DragDropContainerProps) {
         return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
-  // Validate files before upload
-    const validateAndProcessFiles = (files: File[]) => {
+    // Validate files before upload with toast messages
+    const validateAndProcessFiles = async (files: File[]) => {
         // Filter out directories and invalid files
         const actualFiles = files.filter(file => {
-            
-            // Warn the some file types are not supported
-            if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-                toastService.warning(`Drag Drop does not support DOCX file: ${file.name}`);
-                return false;
-            }
-
             // Check if it's a valid file (not a directory)
             if (file.type === '' && file.size === 0) {
                 toastService.warning(`Skipping directory or invalid file: ${file.name}`);
@@ -80,50 +59,46 @@ export default function DragDropContainer(props: DragDropContainerProps) {
         });
 
         if (actualFiles.length === 0) {
-            toastService.error('This file is not valid. Directories and folders are not supported.');
+            toastService.error('No valid files found. Directories and folders are not supported.');
             return;
         }
 
-        const validFiles = [];
-        const oversized = [];
-        const duplicates = [];
+        const validFiles: File[] = [];
         
-        // Check each file's size and name conflicts
+        // Check each file's size, storage limit, and name conflicts
         for (const file of actualFiles) {
+            // Check file size limit (25MB)
             if (file.size > sizeLimit) {
-                oversized.push(file);
-            } else if (fileExists(file.name)) {
-                duplicates.push(file);
-            } else {
-                validFiles.push(file);
+                toastService.warning(`File "${file.name}" exceeds 25MB limit (${formatFileSize(file.size)}). Please choose a smaller file.`);
+                continue;
             }
-        }
-        
-        setDroppedFiles(actualFiles); // Store all dropped files for reference
-        
-        // Show duplicate files dialog if any duplicates found
-        if (duplicates.length > 0) {
-            setDuplicateFiles(duplicates);
-            setShowSameFileDialog(true);
-        }
-        
-        if (oversized.length > 0) {
-            setOversizedFiles(oversized);
-            setShowSizeLimitDialog(true);
-            // Only proceed with valid files if there are any
-            if (validFiles.length > 0) {
-                setPendingFiles(validFiles);
-                setShowUploadBar(true);
+            
+            // Check for duplicate names
+            if (fileExists(file.name)) {
+                toastService.warning(`A file named "${file.name}" already exists. Please rename the file or choose a different one.`);
+                continue;
             }
-        } else if (validFiles.length > 0) {
-            setPendingFiles(validFiles);
-            setShowUploadBar(true);
+            
+            validFiles.push(file);
         }
-
-        // Check storage limit
-        const totalSize = actualFiles.reduce((sum, file) => sum + file.size, 0);
-        if (totalSize > storageLimit) {
-            setStorageLimitExceeded(true);
+        
+        // Check total storage limit
+        if (validFiles.length > 0) {
+            const totalSize = validFiles.reduce((sum, file) => sum + file.size, 0);
+            if (totalSize > storageLimit) {
+                toastService.error(`Total file size (${formatFileSize(totalSize)}) exceeds 5GB storage limit. Please remove some files.`);
+                return;
+            }
+            
+            // Proceed with valid files
+            try {
+                addToUploadQueue(validFiles);
+                await startUploads();
+                toastService.success(`Uploaded ${validFiles.length} file${validFiles.length > 1 ? 's' : ''} successfully`);
+                handlers.resetDragState();
+            } catch (error) {
+                toastService.error('Failed to upload files');
+            }
         }
     };
 
@@ -154,57 +129,6 @@ export default function DragDropContainer(props: DragDropContainerProps) {
                 <p class="text-text-muted">Release to upload files</p>
             </div>
             </div>
-        </Show>
-
-        {/* UploadBar modal/dialog */}
-        <Show when={showUploadBar() && pendingFiles().length > 0}>
-            <UploadBar
-            isOpen={showUploadBar()}
-            onClose={() => {
-                setShowUploadBar(false);
-                setDroppedFiles([]);
-                setPendingFiles([]);
-                handlers.resetDragState();
-            }}
-            files={pendingFiles()}
-            currentFolderId={props.parentId ?? null}
-            onUploadComplete={() => {
-                setShowUploadBar(false);
-                setDroppedFiles([]);
-                setPendingFiles([]);
-                handlers.resetDragState();
-            }}
-            />
-        </Show>
-
-        {/* Size limit dialog */}
-        <Show when={showSizeLimitDialog()}>
-            <UploadLimitChecker
-            isOpen={showSizeLimitDialog()}
-            onClose={() => setShowSizeLimitDialog(false)}
-            files={oversizedFiles()}
-            currentFolderId={props.parentId ?? null}
-            />
-        </Show>
-
-        {/* Storage limit exceeded warning */}
-        <Show when={storageLimitExceeded()}>
-            <UploadLimitChecker
-            isOpen={storageLimitExceeded()}
-            onClose={() => setStorageLimitExceeded(false)}
-            files={[]}
-            currentFolderId={props.parentId ?? null}
-            />
-        </Show>
-
-        {/* Same file name warning */}
-        <Show when={showSameFileDialog()}>
-            <SameNameChecker
-            isOpen={showSameFileDialog()}
-            files={duplicateFiles()}
-            currentFolderId={props.parentId ?? null}
-            onClose={() => setShowSameFileDialog(false)}
-            />
         </Show>
     </div>
 );

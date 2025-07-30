@@ -41,7 +41,6 @@ export interface FileItem {
   updatedAt?: string;
   ownerId?: string;
   isBin?: boolean;
-  url?: string;
   [key: string]: any; // Allow other properties
 }
 

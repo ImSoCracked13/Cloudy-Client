@@ -14,6 +14,8 @@ const EmptyBinDialog: Component<EmptyBinDialogProps> = (props) => {
   const { emptyBin, loading: emptyLoading, error: emptyError } = useEmptyBin();
   const [isProcessing, setIsProcessing] = createSignal(false);
   
+  // Check if there are any files in the Drive
+
   // Handle empty bin action
   const handleEmptyBin = async () => {
     setIsProcessing(true);
@@ -29,7 +31,6 @@ const EmptyBinDialog: Component<EmptyBinDialogProps> = (props) => {
         toastService.error(emptyError() || 'Failed to empty bin');
       }
     } catch (error) {
-      console.error('Error emptying bin:', error);
       toastService.error(error instanceof Error ? error.message : 'Failed to empty bin');
     } finally {
       setIsProcessing(false);
