@@ -1,5 +1,5 @@
 import { Component, Show, createSignal, onCleanup, onMount } from 'solid-js';
-import { useFileHandler, type FileItem } from '../../../handlers/FileHandler';
+import { type FileItem } from '../../../handlers/FileHandler';
 import toastService from '../../../common/Notification';
 
 // Import dialogs for Drive page
@@ -26,8 +26,6 @@ interface FileContextMenuProps {
 }
 
 const FileContextMenu: Component<FileContextMenuProps> = (props) => {
-  const fileHandler = useFileHandler();
-  
   // Dialog state
   const [showDownloadDialog, setShowDownloadDialog] = createSignal(false);
   const [showDuplicateDialog, setShowDuplicateDialog] = createSignal(false);
