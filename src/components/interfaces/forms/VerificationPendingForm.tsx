@@ -22,9 +22,9 @@ export default function VerificationPendingForm(props: VerificationPendingFormPr
     } else {
       // Try to get from localStorage
       const storedEmail = localStorage.getItem('pending_verification_email') ||
-                         localStorage.getItem('verification_email') || 
-                         localStorage.getItem('register_email') ||
-                         localStorage.getItem('last_login_email');
+                          localStorage.getItem('verification_email') || 
+                          localStorage.getItem('register_email') ||
+                          localStorage.getItem('last_login_email');
       if (storedEmail) {
         // Remove any provider suffix (e.g., ":google")
         const cleanEmail = storedEmail.split(':')[0];

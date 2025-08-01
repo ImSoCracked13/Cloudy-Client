@@ -13,15 +13,13 @@ export default function LoginForm(props: LoginFormProps) {
   const [identifier, setIdentifier] = createSignal('');
   const [password, setPassword] = createSignal('');
   const [showPassword, setShowPassword] = createSignal(false);
-  const [rememberMe, setRememberMe] = createSignal(false);
   const [localError, setLocalError] = createSignal<string | null>(null);
 
-  // Pre-fill identifier from localStorage if "Remember Me" was checked previously
+  // Clear any local error on input change
   createEffect(() => {
-    const savedIdentifier = localStorage.getItem('remembered_identifier');
-    if (savedIdentifier) {
-      setIdentifier(savedIdentifier);
-      setRememberMe(true);
+    // Clear local error when inputs change
+    if (identifier() || password()) {
+      setLocalError(null);
     }
   });
 
@@ -36,15 +34,6 @@ export default function LoginForm(props: LoginFormProps) {
 
   const handleLoginError = (error: string) => {
     setLocalError(error);
-  };
-
-  const handleRememberMe = (checked: boolean) => {
-    setRememberMe(checked);
-    if (checked) {
-      localStorage.setItem('remembered_identifier', identifier());
-    } else {
-      localStorage.removeItem('remembered_identifier');
-    }
   };
 
   return (
@@ -96,21 +85,6 @@ export default function LoginForm(props: LoginFormProps) {
               />
             </div>
             
-            <div class="flex items-center justify-between">
-              <div class="flex items-center">
-                <input
-                  type="checkbox"
-                  id="remember-me"
-                  checked={rememberMe()}
-                  onChange={(e) => handleRememberMe(e.currentTarget.checked)}
-                  class="rounded bg-[#1e1f22] border-[#b5bac1] text-[#5865f2] mr-2 focus:ring-2 focus:ring-[#5865f2] focus:outline-none"
-                />
-                <label for="remember-me" class="text-sm text-[#b5bac1] whitespace-nowrap">
-                  Remember me
-                </label>
-              </div>
-            </div>
-            
             {localError() && (
               <p class="text-[#f23f42] text-sm">{localError()}</p>
             )}
@@ -118,7 +92,6 @@ export default function LoginForm(props: LoginFormProps) {
             <LoginButton
               identifier={identifier()}
               password={password()}
-              rememberMe={rememberMe()}
               onSuccess={props.onSuccess}
               onError={handleLoginError}
               class="w-full bg-[#5865f2] hover:bg-[#4752c4] text-white font-medium py-2.5 px-4 rounded-[3px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"

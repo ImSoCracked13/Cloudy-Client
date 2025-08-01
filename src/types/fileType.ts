@@ -86,7 +86,7 @@ export const FILE_EXTENSIONS: Record<string, FileType> = {
 
 export function getFileType(fileName: string, mimeType?: string): FileType {
   
-  // Try to determine by mime type first
+  // Determine by mime type first
   if (mimeType) {
     const mainType = mimeType.split('/')[0];
     

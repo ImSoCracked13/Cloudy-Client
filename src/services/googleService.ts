@@ -1,6 +1,6 @@
 import { GoogleAuthResponse } from '../types/authType';
 
-// Google configuration from environment
+// Define Google configuration from environment
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 /**
@@ -24,19 +24,19 @@ function decodeJWT(token: string): any {
 }
 
 /**
- * Google Service - Handles Google authentication business logic
- */
+* Google Service - Handles Google authentication business logic
+*/
 export const googleService = {
     /**
-   * Get Google Client ID from environment
-   */
+    * Get Google Client ID from environment
+    */
     getClientId(): string {
         return GOOGLE_CLIENT_ID;
     },
 
     /**
-   * Load Google Identity Services script
-   */
+    * Load Google Identity Services script
+    */
     loadGoogleScript(): Promise<void> {
         return new Promise((resolve, reject) => {
         // Check if script is already loaded
@@ -67,8 +67,8 @@ export const googleService = {
     },
 
     /**
-   * Initialize Google Identity Services
-   */
+    * Initialize Google Identity Services
+    */
     initializeGoogle(callback: (response: any) => void): void {
         if (!window.google) {
         throw new Error('Google Identity Services not loaded');
@@ -83,8 +83,8 @@ export const googleService = {
     },
 
     /**
-   * Process Google credential response
-   */
+    * Process Google credential response
+    */
     processCredentialResponse(response: any): GoogleAuthResponse {
     console.log('Processing Google credential response:', response);
     
@@ -113,8 +113,8 @@ export const googleService = {
     },
 
     /**
-   * Render Google Sign-In button
-   */
+    * Render Google Sign-In button
+    */
     renderButton(container: HTMLElement, options: any = {}): void {
     if (!window.google) {
         throw new Error('Google Identity Services not initialized');

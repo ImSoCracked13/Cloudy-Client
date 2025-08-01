@@ -79,17 +79,12 @@ export interface FileContextValue {
   fetchFiles: (isBin: boolean, forceRefresh?: boolean) => Promise<void>;
   getFilesByType: (type: string | null) => FileItem[];
   getFilesBySearch: (searchTerm: string) => FileItem[];
-  getSortedFiles: (fileList: FileItem[], sortBy?: 'name' | 'size' | 'date', ascending?: boolean) => FileItem[];
   getTotalSize: () => number;
-  getCountByType: () => Record<string, number>;
   fileExists: (fileName: string) => boolean;
-  getUniqueTypes: () => string[];
   refreshFiles: (isBin: boolean) => Promise<void>;
-  updateLocalFiles: (updatedFiles: FileItem[]) => void;
   
   // File actions
-  addToUploadQueue: (files: File[], parentId?: string) => any[];
-  startUploads: (parentId?: string | null) => Promise<FileItem[]>;
+  uploadFiles: (files: File[]) => Promise<FileItem[]>;
   downloadFile: (fileId: string, fileName: string) => Promise<boolean>;
   renameFile: (fileId: string, oldName: string, newName: string) => Promise<FileItem | null>;
   duplicateFile: (fileId: string) => Promise<FileItem | null>;
@@ -123,7 +118,7 @@ export { useFile as useFileHandler};
 
 export const FileHandler: Component<FileHandlerProps> = (props) => {
   const { selectedFile, loading, error, loadProperties } = useProperties();
-  const { addToUploadQueue, startUploads } = useUpload();
+  const { uploadFiles } = useUpload();
   const { downloadFile } = useDownload();
   const { renameFile } = useRename();
   const { duplicateFile } = useDuplicate();
@@ -141,13 +136,9 @@ export const FileHandler: Component<FileHandlerProps> = (props) => {
     fetchFiles,
     getFilesByType,
     getFilesBySearch,
-    getSortedFiles,
     getTotalSize,
-    getCountByType,
     fileExists,
-    getUniqueTypes,
     refreshFiles,
-    updateLocalFiles
   } = useFilesList();
   
   // Initialize loading state
@@ -181,16 +172,11 @@ export const FileHandler: Component<FileHandlerProps> = (props) => {
     fetchFiles,
     getFilesByType,
     getFilesBySearch,
-    getSortedFiles,
     getTotalSize,
-    getCountByType,
     fileExists,
-    getUniqueTypes,
     refreshFiles,
-    updateLocalFiles,
     // Existing functions
-    addToUploadQueue,
-    startUploads,
+    uploadFiles,
     downloadFile,
     renameFile,
     duplicateFile,

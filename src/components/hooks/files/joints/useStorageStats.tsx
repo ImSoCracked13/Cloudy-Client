@@ -25,7 +25,7 @@ const isPublicRoute = (pathname: string): boolean => {
 let lastFetchTime = 0;
 let pendingRequest: Promise<StorageStats | null> | null = null;
 
-const CACHE_DURATION = 30 * 1000; // 30 seconds cache
+const CACHE_DURATION = 5 * 1000; // 5 seconds cache
 
 /**
  * Hook for managing storage statistics with singleton pattern
@@ -43,7 +43,7 @@ export function useStorageStats() {
       return null;
     }
 
-    // Check if we have fresh data (within cache duration)
+    // Check if have fresh data
     const now = Date.now();
     const hasFreshData = fileStore.state.storageStats && (now - lastFetchTime) < CACHE_DURATION;
     
@@ -51,7 +51,7 @@ export function useStorageStats() {
       return fileStore.state.storageStats;
     }
 
-    // If there's already a pending request, wait for it
+    // If there's already a pending request, wait a moment
     if (pendingRequest) {
       return pendingRequest;
     }

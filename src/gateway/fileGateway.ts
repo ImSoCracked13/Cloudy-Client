@@ -1,18 +1,15 @@
 import { createResource, createRoot } from 'solid-js';
 import { FileItem, FilePreviewDto, StorageStats} from '../types/fileType';
 
-// Get environment-specific URLs
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 const IS_PRODUCTION = import.meta.env.VITE_IS_PRODUCTION;
 
-// In production, we use relative URLs since Vercel handles the proxy
 const BASE_API_PATH = IS_PRODUCTION ? '/api' : `${API_URL}/api`;
 
 /**
  * Helper to get the auth token
  */
 function getAuthToken(): string | null {
-  // Check both localStorage and sessionStorage for the token
   const localToken = localStorage.getItem('authToken');
   const sessionToken = sessionStorage.getItem('authToken');
   const token = localToken || sessionToken;
@@ -82,10 +79,6 @@ const fetchPreview = async (fileId: string) => {
 
   const data = await handleResponse(response);
   const previewData = data.data || data;
-  
-  if (previewData.url && previewData.url.includes('cloudy-api.duckdns.org')) {
-    previewData.url = previewData.url.replace('http://', 'https://');
-  }
   
   return previewData;
 };

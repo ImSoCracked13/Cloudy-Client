@@ -1,106 +1,58 @@
-import { batch } from 'solid-js';
 import { fileService } from '../../../../services/fileService';
 import { fileStore } from '../../../store/FileStore';
-import { FileItem } from '../../../../types/fileType';
 
 /**
- * Hook for file upload functionality
+ * Hook for fast file upload functionality
  */
 export function useUpload() {
 
-  const addToUploadQueue = (files: File[]) => {
-    const newUploads = files.map(file => ({
-      file,
-      progress: 0,
-      status: 'pending' as const
-    }));
+  const uploadFiles = async (files: File[]) => {
+    if (!files.length) return [];
 
-    fileStore.setUploads([...fileStore.state.uploads, ...newUploads]);
-    return newUploads;
-  };
-
-  const uploadFile = async (file: File) => {
+    fileStore.setUploadLoading(true);
+    fileStore.setUploadError(null);
+    
     try {
-      batch(() => {
-        fileStore.setUploadLoading(true);
-        fileStore.updateUpload(file, { status: 'uploading', progress: 0 });
-      });
-
-      // Actual upload
-      const result = await fileService.uploadFile(
-        file
-      );
-
-      // Mark as complete
-      fileStore.updateUpload(file, { status: 'completed', progress: 100 });
-      fileStore.setUploadLoading(false);
-
-      return result;
-    } catch (error) {
-      batch(() => {
-        fileStore.setUploadError(error instanceof Error ? error.message : 'Upload failed');
-        fileStore.updateUpload(file, { 
-          status: 'error', 
-          progress: 0, 
-          error: String(error) 
-        });
-      });
-      return null;
-    }
-  };
-
-  const startUploads = async () => {
-    const pendingUploads = fileStore.state.uploads.filter(u => u.status === 'pending');
-    const results: FileItem[] = [];
-    let hasError = false;
-
-    for (const upload of pendingUploads) {
-      try {
-        const result = await uploadFile(upload.file);
-        if (result) {
-          results.push(result);
+      // Upload files in parallel for faster processing
+      const uploadPromises = files.map(async (file) => {
+        try {
+          return await fileService.uploadFile(file);
+        } catch (error) {
+          console.error(`Failed to upload ${file.name}:`, error);
+          return null; // Return null for failed uploads
         }
-      } catch (uploadError) {
-        hasError = true;
-        console.error('Error uploading file:', upload.file.name, uploadError);
+      });
+
+      // Wait for all uploads to complete
+      const results = await Promise.all(uploadPromises);
+      
+      const successfulUploads = results.filter(result => result !== null);
+      const failedCount = results.length - successfulUploads.length;
+
+      if (successfulUploads.length === 0) {
+        throw new Error('All uploads failed');
       }
+      
+      if (failedCount > 0) {
+        fileStore.setUploadError(`${failedCount} file(s) failed to upload`);
+      }
+
+      return successfulUploads;
+    } finally {
+      fileStore.setUploadLoading(false);
     }
-
-    // Reset upload loading state after all uploads complete
-    fileStore.setUploadLoading(false);
-
-    if (hasError && results.length === 0) {
-      throw new Error('All uploads failed');
-    }
-
-    return results;
   };
 
-  const clearCompleted = () => {
-    fileStore.clearCompletedUploads();
-  };
-
-  const clearAllUploads = () => {
-    fileStore.clearAllUploads();
-  };
-
-  const retryUpload = async (file: File) => {
-    fileStore.updateUpload(file, {
-      status: 'pending',
-      progress: 0,
-      error: undefined
-    });
-    return await uploadFile(file);
+  // Optional: Upload single file
+  const uploadSingleFile = async (file: File) => {
+    const results = await uploadFiles([file]);
+    return results[0] || null;
   };
 
   return {
-    uploads: () => fileStore.state.uploads,
+    uploadFiles,
+    uploadSingleFile,
     loading: () => fileStore.state.uploadLoading,
     error: () => fileStore.state.uploadError,
-    addToUploadQueue,
-    startUploads,
-    clearCompleted,
-    clearAllUploads,
-    retryUpload
   };
 }

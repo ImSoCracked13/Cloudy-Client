@@ -44,7 +44,6 @@ export default function RegisterButton(props: RegisterButtonProps) {
         }
 
         try {
-
             const result = await register(props.username, props.email, props.password, props.confirmPassword);
 
             // Handle registration errors in general, this is the best error handling we can do for checking if both Local and Google auth are registered
@@ -80,9 +79,6 @@ export default function RegisterButton(props: RegisterButtonProps) {
                 }
             }
             
-            // Store local email info for cross-checking with Google auth
-            const emailKey = `local_email_${props.email.toLowerCase()}`;
-            localStorage.setItem(emailKey, props.email.toLowerCase());
 
             props.onSuccess?.();
 

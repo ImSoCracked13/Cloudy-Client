@@ -35,8 +35,7 @@ export default function RenameDialog(props: RenameDialogProps) {
     };
   };
 
-  // Reset state when file changes or dialog opens
-  // Only run when dialog is opened
+  // Reset state when file changes or dialog opens for dialog is open
   createEffect(() => {
     if (props.isOpen && props.file) {
       setIsProcessing(false);
@@ -54,7 +53,7 @@ export default function RenameDialog(props: RenameDialogProps) {
     
     if (!props.file || !finalName || finalName === props.file.name) return;
     
-    // Check if the new name already exists (and it's not the current file)
+    // Check if the new name already exists
     if (fileExists(finalName) && finalName !== props.file.name) {
       const errorMsg = `A file named "${finalName}" already exists. Please choose a different name.`;
       setError(errorMsg);
@@ -69,7 +68,6 @@ export default function RenameDialog(props: RenameDialogProps) {
       const renamedFile = await renameFile(props.file.id, props.file.name, finalName);
       
       if (renamedFile) {
-        // Show success notification
         
         // Notify parent component
         if (props.onComplete) {

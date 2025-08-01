@@ -1,4 +1,4 @@
-import { JSX, Show, createSignal } from 'solid-js';
+import { JSX, Show } from 'solid-js';
 import { useDragDrop } from '../../../hooks/files/drive/useDragDrop';
 import { useFilesList } from '../../../hooks/files/joints/useFilesList';
 import { useUpload } from '../../../hooks/files/drive/useUpload';
@@ -14,98 +14,98 @@ interface DragDropContainerProps {
 
 export default function DragDropContainer(props: DragDropContainerProps) {
     const { fileExists } = useFilesList();
-    const { addToUploadQueue, startUploads } = useUpload();
+    const { uploadFiles } = useUpload();
 
-    const sizeLimit = 25 * 1024 * 1024; // 25MB
-    const storageLimit = 5 * 1024 * 1024 * 1024; // 5GB
+    const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+    const MAX_TOTAL_SIZE = 5 * 1024 * 1024 * 1024; // 5GB
 
-    // Format file size for display
-    const formatFileSize = (bytes: number): string => {
-        if (bytes === 0) return '0 Bytes';
-        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
-    };
-
-    // Validate files before upload with toast messages
-    const validateAndProcessFiles = async (files: File[]) => {
+    // Validate files before upload
+    const validateFiles = (files: File[]) => {
         // Filter out directories and invalid files
         const actualFiles = files.filter(file => {
             // Check if it's a valid file (not a directory)
             if (file.type === '' && file.size === 0) {
-                toastService.warning(`Skipping directory or invalid file: ${file.name}`);
+                toastService.warning(`Skipping directory: ${file.name}`);
                 return false;
             }
             
             // Check if file has a valid name
             if (!file.name || file.name.trim() === '') {
-                toastService.warning(`Skipping file with invalid name: ${file.name}`);
+                toastService.warning(`Skipping invalid file: ${file.name}`);
                 return false;
             }
             
             // Additional check for webkit relative path (folder drops)
             if ((file as any).webkitRelativePath && (file as any).webkitRelativePath !== '') {
-                toastService.warning(`Skipping folder drop: ${file.name}`);
+                toastService.warning(`Skipping folder: ${file.name}`);
                 return false;
             }
             
-            // Ensure it's actually a File object
-            if (!(file instanceof File)) {
-                toastService.warning(`Skipping non-file item: ${file}`);
-                return false;
-            }
-            
-            return true;
+            return file instanceof File;
         });
 
         if (actualFiles.length === 0) {
-            toastService.error('No valid files found. Directories and folders are not supported.');
-            return;
+            toastService.error('No valid files found. Directories are not supported.');
+            return [];
         }
 
         const validFiles: File[] = [];
         
-        // Check each file's size, storage limit, and name conflicts
         for (const file of actualFiles) {
-            // Check file size limit (25MB)
-            if (file.size > sizeLimit) {
-                toastService.warning(`File "${file.name}" exceeds 25MB limit (${formatFileSize(file.size)}). Please choose a smaller file.`);
+            // Check file size
+            if (file.size > MAX_FILE_SIZE) {
+                toastService.warning(`"${file.name}" is too large (max 25MB)`);
                 continue;
             }
             
-            // Check for duplicate names
+            // Check for duplicates
             if (fileExists(file.name)) {
-                toastService.warning(`A file named "${file.name}" already exists. Please rename the file or choose a different one.`);
+                toastService.warning(`"${file.name}" already exists`);
                 continue;
             }
             
             validFiles.push(file);
         }
         
-        // Check total storage limit
+        // Check total size
         if (validFiles.length > 0) {
             const totalSize = validFiles.reduce((sum, file) => sum + file.size, 0);
-            if (totalSize > storageLimit) {
-                toastService.error(`Total file size (${formatFileSize(totalSize)}) exceeds 5GB storage limit. Please remove some files.`);
-                return;
+            if (totalSize > MAX_TOTAL_SIZE) {
+                toastService.error('Total size exceeds 5GB limit');
+                return [];
+            }
+        }
+        
+        return validFiles;
+    };
+
+    // Handle file upload
+    const handleUpload = async (files: File[]) => {
+        const validFiles = validateFiles(files);
+        if (validFiles.length === 0) return;
+        
+        try {
+            const results = await uploadFiles(validFiles);
+            const successCount = results.length;
+            const failedCount = validFiles.length - successCount;
+            
+            if (successCount > 0) {
+                toastService.success(`Uploaded ${successCount} file${successCount > 1 ? 's' : ''}`);
+                handlers.resetDragState();
             }
             
-            // Proceed with valid files
-            try {
-                addToUploadQueue(validFiles);
-                await startUploads();
-                toastService.success(`Uploaded ${validFiles.length} file${validFiles.length > 1 ? 's' : ''} successfully`);
-                handlers.resetDragState();
-            } catch (error) {
-                toastService.error('Failed to upload files');
+            if (failedCount > 0) {
+                toastService.warning(`${failedCount} file${failedCount > 1 ? 's' : ''} failed`);
             }
+        } catch (error) {
+            toastService.error('Upload failed');
         }
     };
 
     const { state, handlers } = useDragDrop((files) => {
         if (!props.disabled) {
-        props.onFilesSelected?.(files);
-        validateAndProcessFiles(files);
+            props.onFilesSelected?.(files);
+            handleUpload(files);
         }
     });
 

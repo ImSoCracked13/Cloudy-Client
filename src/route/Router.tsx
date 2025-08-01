@@ -1,4 +1,4 @@
-import { lazy } from 'solid-js';
+import { lazy, Suspense } from 'solid-js';
 import { Route } from '@solidjs/router';
 import PublicLayout from '../layout/PublicLayout';
 import AuthenticatedLayout from '../layout/AuthenticatedLayout';
@@ -19,7 +19,7 @@ const ErrorPage = lazy(() => import('../pages/Error'));
 
 export default function Router() {
   return (
-    <>
+    <Suspense fallback={<div class="text-center py-8">Loading...</div>}>
       {/* Public Routes */}
       <Route path="/" component={() => (
         <PublicLayout>
@@ -93,6 +93,6 @@ export default function Router() {
           <ErrorPage code={404} message="Page not found" />
         </PublicLayout>
       )} />
-    </>
+    </Suspense>
   );
-} 
+}

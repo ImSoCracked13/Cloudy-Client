@@ -18,7 +18,7 @@ const FilePreview: Component<FilePreviewProps> = (props) => {
   const [preview, setPreview] = createSignal<any | null>(null);
   const [loading, setLoading] = createSignal(true);
   const [error, setError] = createSignal<string | null>(null);
-  const size = props.size || 'lg'; // Changed default to 'lg'
+  const size = props.size || 'lg';
   
   // Prevent background scrolling when preview is open
   onMount(() => {
@@ -39,7 +39,7 @@ const FilePreview: Component<FilePreviewProps> = (props) => {
   });
   
   createEffect(() => {
-    // Only load preview when the component is open and we have a file
+    // Only load preview when the component is open
     if (props.isOpen !== false && props.file) {
       loadPreview();
     }
@@ -82,8 +82,10 @@ const FilePreview: Component<FilePreviewProps> = (props) => {
   // Handle download
   const handleDownload = async () => {
     try {
+      setLoading(true);
       await downloadFile(props.file.id, props.file.name);
       toastService.success('Downloaded file successfully');
+      setLoading(false);
     } catch (error) {
       toastService.error(error instanceof Error ? error.message : 'Download failed');
     }

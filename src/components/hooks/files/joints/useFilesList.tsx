@@ -2,7 +2,6 @@ import { onMount } from 'solid-js';
 import { useLocation } from '@solidjs/router';
 import { fileService } from '../../../../services/fileService';
 import { fileStore } from '../../../store/FileStore';
-import { FileItem } from '../../../../types/fileType';
 
 // Define public routes where file fetching should be disabled
 const PUBLIC_ROUTES = [
@@ -110,7 +109,6 @@ export function useFilesList() {
   // Listen for file operations that require refresh
   const handleRefreshEvent = (event: CustomEvent) => {
     const { location } = event.detail || {};
-    // Refresh the appropriate file list based on the location in the event detail
     if (location === 'Drive') {
       fetchFiles(false, true); // Force refresh for Drive files
     } else if (location === 'Bin') {
@@ -122,7 +120,6 @@ export function useFilesList() {
   const handleFileUploaded = () => fetchFiles(false, true); // Force refresh on upload
   
   onMount(() => {
-    // Only set up event listeners if not already done
     if (!eventListenersSetup) {
       window.addEventListener('files-refreshed', handleRefreshEvent as EventListener);
       window.addEventListener('file-uploaded', handleFileUploaded);
@@ -149,41 +146,9 @@ export function useFilesList() {
     );
   };
 
-  // Sort files by different criteria
-  const getSortedFiles = (
-    fileList: FileItem[],
-    sortBy: 'name' | 'size' | 'date' = 'name',
-    ascending: boolean = true
-  ) => {
-    return [...fileList].sort((a, b) => {
-      let comparison = 0;
-      switch (sortBy) {
-        case 'name':
-          comparison = a.name.localeCompare(b.name);
-          break;
-        case 'size':
-          comparison = (a.size || 0) - (b.size || 0);
-          break;
-        case 'date':
-          comparison = new Date(a.updatedAt || 0).getTime() - new Date(b.updatedAt || 0).getTime();
-          break;
-      }
-      return ascending ? comparison : -comparison;
-    });
-  };
-
   // Get total size of files
   const getTotalSize = () => {
     return files().reduce((total, file) => total + (file.size || 0), 0);
-  };
-
-  // Get count by file type
-  const getCountByType = () => {
-    return files().reduce((acc, file) => {
-      const type = file.type || 'other';
-      acc[type] = (acc[type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
   };
 
   // Check if file exists
@@ -191,23 +156,9 @@ export function useFilesList() {
     return files().some(file => file.name === fileName);
   };
 
-  // Get unique file types
-  const getUniqueTypes = () => {
-    return Array.from(new Set(files().map(file => file.type || 'other')));
-  };
-
   // Refresh files list
   const refreshFiles = async (isBin: boolean = false) => {
     await fetchFiles(isBin, true); // Force refresh when explicitly requested
-  };
-
-  // Update local file list after operations
-  const updateLocalFiles = (updatedFiles: FileItem[], isBin: boolean = false) => {
-    if (isBin) {
-      fileStore.setBinFiles(updatedFiles);
-    } else {
-      fileStore.setDriveFiles(updatedFiles);
-    }
   };
 
   return {
@@ -218,13 +169,9 @@ export function useFilesList() {
     fetchFiles,
     getFilesByType,
     getFilesBySearch,
-    getSortedFiles,
     getTotalSize,
-    getCountByType,
     fileExists,
-    getUniqueTypes,
     refreshFiles,
-    updateLocalFiles,
     getDriveFiles: () => fileStore.state.driveFiles,
     getBinFiles: () => fileStore.state.binFiles,
     getCurrentLocation: () => fileStore.state.currentLocation

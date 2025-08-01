@@ -46,6 +46,7 @@ const DeleteForeverDialog: Component<DeleteForeverDialogProps> = (props) => {
         props.onComplete();
         props.onClose();
       } else if (deleteError()) {
+        throw new Error(deleteError());
       }
     } catch (error) {
       throw new Error(

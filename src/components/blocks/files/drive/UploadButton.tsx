@@ -10,62 +10,67 @@ interface UploadButtonProps {
 }
 
 export default function UploadButton(props: UploadButtonProps) {
-  const { loading: uploadLoading, clearAllUploads, startUploads, addToUploadQueue } = useUpload();
+  const { uploadFiles, loading } = useUpload();
   const { fileExists } = useFilesList();
 
-  const sizeLimit = 25 * 1024 * 1024; // 25MB
-  const storageLimit = 5 * 1024 * 1024 * 1024; // 5GB
+  const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+  const MAX_TOTAL_SIZE = 5 * 1024 * 1024 * 1024; // 5GB
 
-  // Format file size for display
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
+  // Validate files before upload
+  const validateFiles = (files: File[]) => {
+    const validFiles: File[] = [];
+    
+    for (const file of files) {
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        toastService.warning(`"${file.name}" is too large (max 25MB)`);
+        continue;
+      }
+      
+      // Check for duplicates
+      if (fileExists(file.name)) {
+        toastService.warning(`"${file.name}" already exists`);
+        continue;
+      }
+      
+      validFiles.push(file);
+    }
+    
+    // Check total size
+    const totalSize = validFiles.reduce((sum, file) => sum + file.size, 0);
+    if (totalSize > MAX_TOTAL_SIZE) {
+      toastService.error('Total size exceeds 5GB limit');
+      return [];
+    }
+    
+    return validFiles;
   };
 
-  // Handle file selection and validation with toast messages
+  // Handle file selection and upload
   const handleFileChange = async (e: Event) => {
     const input = e.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const selectedFiles = Array.from(input.files);
-      const validFiles: File[] = [];
+    const files = input.files ? Array.from(input.files) : [];
+    
+    if (files.length === 0) return;
+    
+    const validFiles = validateFiles(files);
+    if (validFiles.length === 0) return;
+    
+    try {
+      const results = await uploadFiles(validFiles);
+      const successCount = results.length;
+      const failedCount = validFiles.length - successCount;
       
-      // Check each file's size, storage limit, and name conflicts
-      for (const file of selectedFiles) {
-        // Check file size limit (25MB)
-        if (file.size > sizeLimit) {
-          toastService.warning(`File "${file.name}" exceeds 25MB limit (${formatFileSize(file.size)}). Please choose a smaller file.`);
-          continue;
-        }
-        
-        // Check for duplicate names
-        if (fileExists(file.name)) {
-          toastService.warning(`A file named "${file.name}" already exists. Please rename the file or choose a different one.`);
-          continue;
-        }
-        
-        validFiles.push(file);
+      if (successCount > 0) {
+        toastService.success(`Uploaded ${successCount} file${successCount > 1 ? 's' : ''}`);
+        props.onUploadComplete?.();
       }
       
-      // Check total storage limit
-      if (validFiles.length > 0) {
-        const totalSize = validFiles.reduce((sum, file) => sum + file.size, 0);
-        if (totalSize > storageLimit) {
-          toastService.error(`Total file size (${formatFileSize(totalSize)}) exceeds 5GB storage limit. Please remove some files.`);
-          return;
-        }
-        
-        // Proceed with upload
-        try {
-          addToUploadQueue(validFiles);
-          await startUploads();
-          toastService.success(`Uploaded ${validFiles.length} file${validFiles.length > 1 ? 's' : ''} successfully`);
-          props.onUploadComplete?.();
-        } catch (error) {
-          toastService.error('Failed to upload files');
-        }
+      if (failedCount > 0) {
+        toastService.warning(`${failedCount} file${failedCount > 1 ? 's' : ''} failed to upload`);
       }
+    } catch (error) {
+      toastService.error('Upload failed');
     }
   };
   
@@ -78,9 +83,6 @@ export default function UploadButton(props: UploadButtonProps) {
   const handleButtonClick = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    // Clear any previous uploads before starting new ones
-    clearAllUploads();
     
     const fileInput = document.getElementById('file-upload') as HTMLInputElement;
     if (fileInput) {
@@ -101,8 +103,8 @@ export default function UploadButton(props: UploadButtonProps) {
       <Button
         variant="primary"
         leftIcon={uploadIcon}
-        loading={uploadLoading()}
-        disabled={uploadLoading()}
+        loading={loading()}
+        disabled={loading()}
         onClick={handleButtonClick}
         class="!bg-blue-600 hover:!bg-blue-700"
       >

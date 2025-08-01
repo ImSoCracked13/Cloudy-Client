@@ -68,13 +68,6 @@ export default function GoogleButton(props: GoogleButtonProps) {
 
               const user = await googleAuth(response);
               if (user) {
-                // Store the email with google tag for future reference
-                localStorage.setItem('last_login_email', `${payload.email}:google`);
-                
-                // Also store in a separate key for Google email tracking
-                const emailKey = `google_email_${payload.email.toLowerCase()}`;
-                localStorage.setItem(emailKey, payload.email.toLowerCase());
-                
                 handleSuccess(user);
                 toastService.success('Google authentication successful');
               }

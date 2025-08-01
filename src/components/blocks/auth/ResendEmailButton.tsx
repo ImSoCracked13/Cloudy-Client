@@ -37,10 +37,11 @@ export default function ResendEmailButton(props: ResendEmailButtonProps) {
     <Button
       type="button"
       onClick={handleResendEmail}
-      class={`flex justify-center items-center text-center ${props.class || ''}`}
+      loading={resendLoading()}
       disabled={props.disabled || resendLoading()}
+      class={`flex justify-center items-center text-center ${props.class || ''}`}
     >
-      {resendLoading() ? 'Sending...' : 'Resend Email'}
+      Resend Email
     </Button>
   );
 }

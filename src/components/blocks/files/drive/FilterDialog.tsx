@@ -67,7 +67,6 @@ export default function FilterDialog(props: FilterDialogProps) {
       // Notify parent component with selected types
       props.onFilterChange(selected);
       
-      // Save the filter state
       saveFilters(types);
       
     } catch (error) {

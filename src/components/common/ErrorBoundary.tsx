@@ -8,11 +8,6 @@ interface ErrorBoundaryProps {
 export default function ErrorBoundary(props: ErrorBoundaryProps) {
   const [error, setError] = createSignal<Error | null>(null);
 
-  const handleError = (err: Error) => {
-    setError(err);
-    console.error('ErrorBoundary caught an error:', err);
-  };
-
   const resetError = () => {
     setError(null);
   };

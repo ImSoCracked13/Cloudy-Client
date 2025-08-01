@@ -134,32 +134,8 @@ export const authService = {
       localStorage.removeItem('storage_stats');
       localStorage.removeItem('storage_stats_timestamp');
       
-      // Clear Google email tracking
-      Object.keys(localStorage)
-        .filter(key => key.startsWith('google_email_'))
-        .forEach(key => localStorage.removeItem(key));
-      
-      // Clear any other application state that might depend on authentication
-      localStorage.removeItem('lastPath');
-      localStorage.removeItem('persistentLogin');
-      
       // Clear all session storage
       sessionStorage.clear();
-      
-      // Clear any auth-related cookies
-      document.cookie.split(";").forEach(cookie => {
-        const eqPos = cookie.indexOf("=");
-        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-        if (name.toLowerCase().includes('auth') || name.toLowerCase().includes('token')) {
-          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
-          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-        }
-      });
-      
-      // Force a page reload to clear any in-memory state and stop API calls
-      if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
-        window.location.href = '/login';
-      }
     }
   },
   
@@ -207,27 +183,8 @@ export const authService = {
         localStorage.removeItem('storage_stats');
         localStorage.removeItem('storage_stats_timestamp');
         
-        // Clear Google email tracking
-        Object.keys(localStorage)
-          .filter(key => key.startsWith('google_email_'))
-          .forEach(key => localStorage.removeItem(key));
-        
-        // Clear any other application state
-        localStorage.removeItem('lastPath');
-        localStorage.removeItem('persistentLogin');
-        
         // Clear all session storage
         sessionStorage.clear();
-        
-        // Clear any auth-related cookies
-        document.cookie.split(";").forEach(cookie => {
-          const eqPos = cookie.indexOf("=");
-          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-          if (name.toLowerCase().includes('auth') || name.toLowerCase().includes('token')) {
-            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
-            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-          }
-        });
       }
       
       return result;

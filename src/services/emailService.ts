@@ -1,17 +1,14 @@
 import emailjs from '@emailjs/browser';
 
-// Define EmailJS configuration from environment variables
 const EMAIL_JS_CONFIG = {
   SERVICE_ID: import.meta.env.VITE_EMAIL_SERVICE_ID,
   TEMPLATE_ID: import.meta.env.VITE_EMAIL_TEMPLATE_ID,
   PUBLIC_KEY: import.meta.env.VITE_EMAIL_PUBLIC_KEY
 };
 
-// Get environment-specific URLs
 const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL;
 const IS_PRODUCTION = import.meta.env.VITE_IS_PRODUCTION;
 
-// Frontend URL
 const VERIFICATION_URL = FRONTEND_URL ? FRONTEND_URL : IS_PRODUCTION;
 
 // Initialize EmailJS
@@ -23,6 +20,7 @@ try {
       throttle: 10000,
     }
   });
+  console.log('EmailJS initialized with public key:', EMAIL_JS_CONFIG.PUBLIC_KEY);
 } catch (error) {
   console.error('Failed to initialize EmailJS:', error);
 }
@@ -59,7 +57,6 @@ export const emailService = {
       const result = await emailjs.send(
         EMAIL_JS_CONFIG.SERVICE_ID,
         EMAIL_JS_CONFIG.TEMPLATE_ID,
-        // Use the template parameters directly
         templateParams,
         EMAIL_JS_CONFIG.PUBLIC_KEY
       ).catch(error => {

@@ -1,18 +1,15 @@
 import { createResource, createRoot } from 'solid-js';
 import { LoginCredentials, RegisterCredentials, GoogleAuthResponse, User } from '../types/authType';
 
-// Get environment-specific URLs
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 const IS_PRODUCTION = import.meta.env.VITE_IS_PRODUCTION;
 
-// In production, we use relative URLs since Vercel handles the proxy
 const BASE_API_PATH = IS_PRODUCTION ? '/api' : `${API_URL}/api`;
 
 /**
  * Helper to get the auth token
  */
 function getAuthToken(): string | null {
-  // Check both localStorage and sessionStorage for the token
   const localToken = localStorage.getItem('authToken');
   const sessionToken = sessionStorage.getItem('authToken');
   const token = localToken || sessionToken;
@@ -437,7 +434,6 @@ const authGateway = {
       
       // If success, clear storage and refetch resources
       if (result.success) {
-        // Clear auth token and other stored data
         localStorage.clear();
         
         // Refetch resources after account deletion

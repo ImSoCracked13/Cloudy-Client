@@ -11,7 +11,6 @@ export const fileService = {
    */
   async uploadFile(
     fileToUpload: File, 
-    onProgress?: (progress: number) => void,
   ): Promise<FileItem> {
     try {
       
@@ -19,16 +18,10 @@ export const fileService = {
       if (!fileToUpload) throw new Error('No file provided');
       if (fileToUpload.size === 0) throw new Error('File is empty');
       
-      // Enhanced progress callback that updates store
-      const enhancedProgress = (progress: number) => {
-        onProgress?.(progress);
-      };
-      
       // Get response from gateway
       const response = await fileGateway.uploadFile(
         fileToUpload,
         null,
-        enhancedProgress,
       );
       
       const result = response.data;
@@ -70,11 +63,6 @@ export const fileService = {
       
       // Fix the type issue by using type assertion or checking for existence
       const previewData = ('data' in preview ? preview.data : preview) as FilePreviewDto;
-      
-      // Ensure HTTPS for MinIO URLs
-      if (previewData && previewData.url && previewData.url.includes('cloudy-api.duckdns.org')) {
-        previewData.url = previewData.url.replace('http://', 'https://');
-      }
       
       return previewData;
     } catch (error) {
@@ -210,14 +198,8 @@ export const fileService = {
    */
   async moveToBin(fileId: string): Promise<void> {
     try {
-      // Get minimal file details to avoid full database query
-      const fileName = localStorage.getItem(`file_name_${fileId}`);
-      
       // Start the move operation immediately
       const movePromise = fileGateway.moveToBin(fileId);
-      
-      // Clear cache immediately to prevent stale data
-      localStorage.removeItem(`file_${fileId}`);
       
       // Dispatch refresh events for UI responsiveness
       window.dispatchEvent(new CustomEvent('files-refreshed', { 
@@ -237,14 +219,8 @@ export const fileService = {
    */
   async restoreFromBin(fileId: string): Promise<void> {
     try {
-      // Get minimal file details to avoid full database query
-      const fileName = localStorage.getItem(`file_name_${fileId}`);
-      
       // Start the restore operation immediately
       const restorePromise = fileGateway.restoreFromBin(fileId);
-      
-      // Clear cache immediately to prevent stale data
-      localStorage.removeItem(`file_${fileId}`);
       
       // Dispatch refresh events for UI responsiveness
       window.dispatchEvent(new CustomEvent('files-refreshed', { 
@@ -255,12 +231,6 @@ export const fileService = {
       await restorePromise;
 
     } catch (error) {
-      // If the error is "not in trash", this is not a critical error
-      if (error instanceof Error && error.message.includes('not in bin')) {
-        console.log('File is not in bin, not showing error notification');
-        return;
-      }
-      
       console.error('Error restoring file from bin:', error);
     }
   },
@@ -380,7 +350,7 @@ export const fileService = {
         throw new Error('Failed to get storage stats');
       }
       
-      // Format stats to match our interface
+      // Format stats to match the bar's interface
       const formattedStats: StorageStats = {
         used: stats.storageUsed || 0,
         total: stats.storageLimit || 5368709120, // 5GB default
@@ -401,7 +371,6 @@ export const fileService = {
       if (forceRefresh) {
         console.error(error instanceof Error ? error.message : 'Failed to get storage stats');
       }
-      
       
       // Return default values as last resort
       return {

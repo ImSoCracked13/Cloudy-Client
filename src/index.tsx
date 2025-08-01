@@ -1,12 +1,7 @@
-/* @refresh reload */
 import { render } from 'solid-js/web';
 import App from './App';
-
-// Import UnoCSS styles
 import 'uno.css';
 import '@unocss/reset/tailwind.css';
-
-// Import custom styles
 import './styles/Theme.css';
 
 // Initialize the application
@@ -29,10 +24,8 @@ const initApp = () => {
   });
 };
 
-// Initialize app settings
 initApp();
 
-// Mount the app
 const root = document.getElementById('root');
 
 if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
