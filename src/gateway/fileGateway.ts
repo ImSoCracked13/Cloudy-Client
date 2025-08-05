@@ -151,7 +151,7 @@ const fetchMoveToBin = async (fileId: string) => {
 const fetchRestore = async (fileId: string) => {
   const token = getAuthToken();
   const response = await fetch(`${BASE_API_PATH}/files/${fileId}/restore`, {
-    method: 'POST',
+    method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -180,7 +180,7 @@ const fetchDelete = async (fileId: string) => {
 const fetchEmptyBin = async () => {
   const token = getAuthToken();
   const response = await fetch(`${BASE_API_PATH}/files/empty-bin`, {
-    method: 'POST',
+    method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -243,7 +243,6 @@ const fetchStorageStats = async () => {
   });
 
   const data = await handleResponse(response);
-  // Return with computed percentage for smoother updates
   const stats = data.data;
   return {...stats};
 };

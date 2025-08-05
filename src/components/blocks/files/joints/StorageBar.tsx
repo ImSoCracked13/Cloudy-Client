@@ -15,7 +15,6 @@ const StorageBar: Component<StorageBarProps> = (props) => {
   const [usagePercentage, setUsagePercentage] = createSignal(0);
   const [isLoading, setIsLoading] = createSignal(true);
   const [hasError, setHasError] = createSignal(false);
-
   
   // Format storage size
   const formatStorageSize = (bytes: number): string => {
@@ -51,7 +50,6 @@ const StorageBar: Component<StorageBarProps> = (props) => {
 
   // Event handler specifically for storage-changing operations
   const handleStorageChange = () => {
-    // For storage-changing operations, force fresh data fetch
     loadStorageStatsForced();
   };
 
@@ -78,7 +76,6 @@ const StorageBar: Component<StorageBarProps> = (props) => {
 
   // Set up event listeners
   onMount(() => {
-    // Only listen for storage-changing operations (force fresh fetch)
     window.addEventListener('storage-changed', handleStorageChange);
     
     // Initial load

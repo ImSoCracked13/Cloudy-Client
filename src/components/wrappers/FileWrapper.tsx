@@ -13,7 +13,6 @@ type FileWrapperProps = {
 const FileWrapper: Component<FileWrapperProps> = (props) => {
   const [error, setError] = createSignal<string | null>(null);
   
-  
   const renderContent = () => {
     try {
       switch (props.type) {

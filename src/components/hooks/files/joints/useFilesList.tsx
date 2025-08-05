@@ -52,7 +52,7 @@ export function useFilesList() {
     const fileType = isBin ? 'bin' : 'drive';
     const currentFiles = isBin ? fileStore.state.binFiles : fileStore.state.driveFiles;
     
-    // Check if we have fresh data and the current location matches what we're asking for
+    // Check if have fresh data and the current location matches
     const hasFreshData = currentFiles.length > 0 && (now - lastFetchTime) < CACHE_DURATION;
     const locationMatches = fileStore.state.currentLocation === (isBin ? 'bin' : 'drive');
     
@@ -110,9 +110,9 @@ export function useFilesList() {
   const handleRefreshEvent = (event: CustomEvent) => {
     const { location } = event.detail || {};
     if (location === 'Drive') {
-      fetchFiles(false, true); // Force refresh for Drive files
+      fetchFiles(false, true);
     } else if (location === 'Bin') {
-      fetchFiles(true, true); // Force refresh for Bin files
+      fetchFiles(true, true);
     }
   };
 
@@ -130,26 +130,6 @@ export function useFilesList() {
     }
   });
 
-  // Get files by type
-  const getFilesByType = (type: string | null) => {
-    if (!type) return files();
-    return files().filter(file => file.type === type);
-  };
-
-  // Get files by search term
-  const getFilesBySearch = (searchTerm: string) => {
-    if (!searchTerm) return files();
-    const term = searchTerm.toLowerCase();
-    return files().filter(file => 
-      file.name.toLowerCase().includes(term) ||
-      (file.type && file.type.toLowerCase().includes(term))
-    );
-  };
-
-  // Get total size of files
-  const getTotalSize = () => {
-    return files().reduce((total, file) => total + (file.size || 0), 0);
-  };
 
   // Check if file exists
   const fileExists = (fileName: string) => {
@@ -167,9 +147,6 @@ export function useFilesList() {
     error: () => fileStore.state.filesError,
     lastUpdated: () => fileStore.state.lastUpdated,
     fetchFiles,
-    getFilesByType,
-    getFilesBySearch,
-    getTotalSize,
     fileExists,
     refreshFiles,
     getDriveFiles: () => fileStore.state.driveFiles,

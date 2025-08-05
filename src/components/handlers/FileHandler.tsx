@@ -77,9 +77,7 @@ export interface FileContextValue {
   files: () => FileItem[];
   lastUpdated: () => Date;
   fetchFiles: (isBin: boolean, forceRefresh?: boolean) => Promise<void>;
-  getFilesByType: (type: string | null) => FileItem[];
-  getFilesBySearch: (searchTerm: string) => FileItem[];
-  getTotalSize: () => number;
+
   fileExists: (fileName: string) => boolean;
   refreshFiles: (isBin: boolean) => Promise<void>;
   
@@ -134,9 +132,7 @@ export const FileHandler: Component<FileHandlerProps> = (props) => {
     files,
     lastUpdated,
     fetchFiles,
-    getFilesByType,
-    getFilesBySearch,
-    getTotalSize,
+
     fileExists,
     refreshFiles,
   } = useFilesList();
@@ -170,9 +166,7 @@ export const FileHandler: Component<FileHandlerProps> = (props) => {
     files,
     lastUpdated,
     fetchFiles,
-    getFilesByType,
-    getFilesBySearch,
-    getTotalSize,
+
     fileExists,
     refreshFiles,
     // Existing functions

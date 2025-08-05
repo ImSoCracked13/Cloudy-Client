@@ -43,15 +43,8 @@ export function useUpload() {
     }
   };
 
-  // Optional: Upload single file
-  const uploadSingleFile = async (file: File) => {
-    const results = await uploadFiles([file]);
-    return results[0] || null;
-  };
-
   return {
     uploadFiles,
-    uploadSingleFile,
     loading: () => fileStore.state.uploadLoading,
     error: () => fileStore.state.uploadError,
   };
